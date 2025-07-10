@@ -1,0 +1,23 @@
+{
+  "name": "dadgic-league",
+  "version": "1.0.0",
+  "description": "Dadgic league site",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thesteamnetworkcom/dadgic-league.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/thesteamnetworkcom/dadgic-league/issues"
+  },
+  "homepage": "https://github.com/thesteamnetworkcom/dadgic-league#readme"
+}
