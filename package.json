@@ -1,23 +1,26 @@
 {
   "name": "dadgic-league",
-  "version": "1.0.0",
-  "description": "Dadgic league site",
-  "main": "index.js",
-  "directories": {
-    "lib": "lib"
-  },
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/thesteamnetworkcom/dadgic-league.git"
+  "dependencies": {
+    "next": "15.3.5",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/thesteamnetworkcom/dadgic-league/issues"
-  },
-  "homepage": "https://github.com/thesteamnetworkcom/dadgic-league#readme"
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^24.0.12",
+    "@types/react": "^19.1.8",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.5",
+    "tailwindcss": "^4",
+    "typescript": "^5.8.3"
+  }
 }
