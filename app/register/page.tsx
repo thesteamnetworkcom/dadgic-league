@@ -10,7 +10,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const router = useRouter()
-  
+
   useEffect(() => {
     async function init() {
       // Step 1: Get logged in user
@@ -66,7 +66,7 @@ export default function RegisterPage() {
     }
 
     init()
-  }, [])
+  }, [router])
 
   if (loading) return <p className="p-6 text-white">Loading...</p>
   if (error) return <p className="p-6 text-red-400">{error}</p>
@@ -75,7 +75,7 @@ export default function RegisterPage() {
   return (
     <main className="p-6 max-w-md mx-auto text-white">
       <h1 className="text-3xl font-bold mb-4">Welcome to the DMBL</h1>
-      <p className="mb-2">You're registered as <strong>{player.display_name}</strong></p>
+      <p className="mb-2">{`You're registered as `}<strong>{player.display_name}</strong></p>
       <p className="text-sm text-gray-400">({player.email})</p>
     </main>
   )
