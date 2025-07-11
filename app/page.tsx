@@ -2,34 +2,33 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import SignInButton from './components/discordbutton'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import SignInButton from './components/discordbutton'
 
 export default function HomePage() {
+  const router = useRouter()
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
-      setLoading(false)
+       if (session.user) {
+        router.replace('/home')
+      } else {
+        setLoading(false)
+      }
     })
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
     })
-
-    return () => listener.subscription.unsubscribe()
-  }, [])
-
-  const signInWithDiscord = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'discord',
-      options: {
-        redirectTo: 'http://localhost:3000/register', // Replace for prod
-      },
-    })
-  }
+    
+    return () => {
+      listener.subscription.unsubscribe()
+    }
+  }, [router])
 
   const signOut = async () => {
     await supabase.auth.signOut()
@@ -48,7 +47,7 @@ export default function HomePage() {
       {!loading && user && (
         <div className="text-center space-y-4">
           <p>
-            Welcome, <strong>{user.user_metadata?.user_name || user.email}</strong>!
+            Welcome, <strong>{user.user_metadata?.full_name || user.email}</strong>!
           </p>
           <div className="flex gap-4 justify-center mt-4">
             <Link

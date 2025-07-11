@@ -11,62 +11,97 @@ export default function RegisterPage() {
   const [error, setError] = useState(null)
   const router = useRouter()
 
-  useEffect(() => {
-    async function init() {
-      // Step 1: Get logged in user
-      const { data: { session } } = await supabase.auth.getSession()
-      const user = session?.user
-      setUser(user)
+ useEffect(() => {
+  async function init() {
+    const { data: { session } } = await supabase.auth.getSession()
+    const user = session?.user
+    setUser(user)
 
-      if (!user) {
-        setLoading(false)
-        return
-      }
-
-      // Step 2: See if player already exists
-      const { data: existing, error: fetchError } = await supabase
-        .from('players')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle()
-
-      if (fetchError) {
-        setError('Could not check player status')
-        setLoading(false)
-        return
-      }
-
-      if (existing) {
-        setPlayer(existing)
-        setLoading(false)
-        return
-      }
-
-      // Step 3: Auto-register this user
-      const username = user.user_metadata?.user_name || user.user_metadata?.full_name || 'Unknown'
-      const email = user.email
-
-      const { data: created, error: insertError } = await supabase.from('players').insert([
-        {
-          user_id: user.id,
-          display_name: username,
-          email: user.email,
-          active: true,
-        },
-      ]).select().maybeSingle()
-
-      if (insertError) {
-        setError('Auto-registration failed: ' + insertError.message)
-      } else {
-        setPlayer(created)
-        router.push('/home')
-      }
-
+    if (!user) {
       setLoading(false)
+      return
     }
 
-    init()
-  }, [router])
+    const user_id = user.id
+    const username = user.user_metadata?.user_name || user.user_metadata?.full_name || 'Unknown'
+    const email = user.email
+
+    // Step 1: Check if player exists by user_id
+    const { data: existingById, error: fetchError } = await supabase
+      .from('players')
+      .select('*')
+      .eq('user_id', user_id)
+      .maybeSingle()
+
+    if (fetchError) {
+      setError('Could not check player status')
+      setLoading(false)
+      return
+    }
+
+    if (existingById) {
+      setPlayer(existingById)
+      setLoading(false)
+      return
+    }
+
+    // Step 2: Check if a historical player exists by display_name
+    const { data: existingByName, error: nameCheckError } = await supabase
+      .from('players')
+      .select('*')
+      .eq('display_name', username)
+      .maybeSingle()
+
+    if (nameCheckError) {
+      setError('Could not check name-based player status')
+      setLoading(false)
+      return
+    }
+
+    if (existingByName) {
+      // Step 2a: Patch in the user_id now that they've logged in
+      const { error: updateError } = await supabase
+        .from('players')
+        .update({ user_id })
+        .eq('id', existingByName.id)
+
+      if (updateError) {
+        setError('Failed to link existing player to user_id: ' + updateError.message)
+        setLoading(false)
+        return
+      }
+
+      setPlayer({ ...existingByName, user_id })
+      router.push('/home')
+      return
+    }
+
+    // Step 3: No match found, insert new record
+    const { data: created, error: insertError } = await supabase
+      .from('players')
+      .insert([
+        {
+          user_id: user_id,
+          display_name: username,
+          email: email,
+          active: true,
+        },
+      ])
+      .select()
+      .maybeSingle()
+
+    if (insertError) {
+      setError('Auto-registration failed: ' + insertError.message)
+    } else {
+      setPlayer(created)
+      router.push('/home')
+    }
+
+    setLoading(false)
+  }
+
+  init()
+}, [router])
 
   if (loading) return <p className="p-6 text-white">Loading...</p>
   if (error) return <p className="p-6 text-red-400">{error}</p>
