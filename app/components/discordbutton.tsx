@@ -6,7 +6,7 @@ export default function SignInButton() {
     await supabase.auth.signInWithOAuth({
       provider: 'discord',
       options: {
-        redirectTo: "https://localhost:3000/register"
+        redirectTo: "http://localhost:3000/register"
       }
     })
   }

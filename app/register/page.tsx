@@ -10,6 +10,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const router = useRouter()
+  
   useEffect(() => {
     async function init() {
       // Step 1: Get logged in user
