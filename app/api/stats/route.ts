@@ -1,7 +1,10 @@
 import { supabase } from '@/lib/supabase'
 import { NextResponse } from 'next/server'
 
-export async function GET() {
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url)
+  const offset = parseInt(searchParams.get('offset') || '0', 10)
+
   const { data, error } = await supabase
     .from('matches')
     .select(`
@@ -21,7 +24,7 @@ export async function GET() {
         format
       )
     `)
-    .range(0, 9999)
+    .range(offset, offset + 999)
 
   if (error || !data) {
     return NextResponse.json({ error: error?.message ?? 'Unknown error' }, { status: 500 })
