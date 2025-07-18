@@ -1,0 +1,24 @@
+{
+  "name": "@dadgic/import-tool",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts"
+  },
+  "dependencies": {
+    "@dadgic/database": "*",
+    "csv-parser": "^3.0.0",
+    "inquirer": "^9.2.0",
+    "chalk": "^5.3.0",
+    "dotenv": "^16.3.0"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.0",
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
