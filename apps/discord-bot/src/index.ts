@@ -49,6 +49,7 @@ interface ConversationState {
     name: string;
     discord_username: string;
     commander: string;
+    id: string;
     result: 'win' | 'lose' | 'draw';
   }>;
   missingData: {
@@ -570,24 +571,52 @@ async function submitReport(interaction: ButtonInteraction, state: ConversationS
     
     // Fix the type issues to match your existing CreatePodInput interface
     const podInput = {
-      league_id: undefined, // Use undefined instead of null
-      date: new Date(state.parsedData.date),
-      game_length_minutes: state.parsedData.game_length_minutes || undefined, // undefined instead of null
-      turns: state.parsedData.turns || undefined, // undefined instead of null
-      notes: state.parsedData.notes || undefined, // undefined instead of null
+      league_id: undefined,
+      date: state.parsedData.date, // FIXED: Already a string, don't wrap in new Date()
+      game_length_minutes: state.parsedData.game_length_minutes || undefined,
+      turns: state.parsedData.turns || undefined,
+      notes: state.parsedData.notes || undefined,
       participants: state.matchedPlayers.map(player => ({
-        player_id: player.discord_username, // This should map to your player UUIDs
+        player_id: player.id, // FIXED: Now uses UUID instead of discord_username
         commander_deck: player.commander,
         result: player.result
       }))
     };
 
-    console.log('🗄️ Calling PodQueries.create with:', podInput);
+    console.log('🗄️ Creating pod with serviceSupabase...');
 
-    // Use your existing database abstraction
-    const result = await db.pods.create(podInput);
+    // QUICK FIX: Use serviceSupabase directly instead of db.pods.create()
+    const { data: pod, error: podError } = await serviceSupabase
+      .from('pods')
+      .insert({
+        league_id: podInput.league_id || null,
+        date: podInput.date,
+        game_length_minutes: podInput.game_length_minutes || null,
+        turns: podInput.turns || null,
+        participant_count: podInput.participants.length,
+        notes: podInput.notes || null
+      })
+      .select()
+      .single();
+    
+    if (podError) throw podError;
 
-    console.log('✅ Pod created successfully:', result);
+    // Insert participants
+    const { data: participants, error: participantsError } = await serviceSupabase
+      .from('pod_participants')
+      .insert(
+        podInput.participants.map(p => ({
+          pod_id: pod.id,
+          player_id: p.player_id, // Now contains actual UUID
+          commander_deck: p.commander_deck,
+          result: p.result
+        }))
+      )
+      .select();
+    
+    if (participantsError) throw participantsError;
+
+    console.log('✅ Pod created successfully:', pod);
 
     // Remove from active conversations
     activeConversations.delete(conversationId);
@@ -598,7 +627,7 @@ async function submitReport(interaction: ButtonInteraction, state: ConversationS
       .setTitle('✅ Report Submitted Successfully!')
       .setDescription('Your Commander game has been recorded in the database.')
       .addFields(
-        { name: '🆔 Pod ID', value: result.id, inline: true },
+        { name: '🆔 Pod ID', value: pod.id, inline: true },
         { name: '📅 Date', value: state.parsedData.date, inline: true },
         { name: '🏆 Winner', value: state.matchedPlayers.find(p => p.result === 'win')?.name || 'Unknown', inline: true },
         { name: '👥 Players', value: state.matchedPlayers.map(p => `${p.name} (${p.commander})`).join('\n'), inline: false }
@@ -617,15 +646,16 @@ async function submitReport(interaction: ButtonInteraction, state: ConversationS
       components: []
     });
 
-    console.log('✅ Successfully submitted report with Pod ID:', result.id);
-
   } catch (error) {
     console.error('❌ Error submitting report:', error);
+    
+    // FIXED: Properly handle unknown error type
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     
     const errorEmbed = new EmbedBuilder()
       .setColor(Colors.Red)
       .setTitle('❌ Submission Failed')
-      .setDescription(`Failed to save the game report: ${error.message}`)
+      .setDescription(`Failed to save the game report: ${errorMessage}`)
       .addFields({
         name: '🔄 Try Again',
         value: 'You can try submitting again or make corrections.'
@@ -651,6 +681,7 @@ async function submitReport(interaction: ButtonInteraction, state: ConversationS
     });
   }
 }
+
 
 // Main interaction handler
 client.on('interactionCreate', async (interaction) => {

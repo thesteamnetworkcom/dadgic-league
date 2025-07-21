@@ -21,7 +21,7 @@ export class ErrorRecoveryMiddleware {
       } catch (error) {
         await ErrorRecoveryService.handleCommandError(
           interaction, 
-          error as Error,
+          error instanceof Error ? error : new Error(String(error)),
           { commandName: interaction.commandName }
         )
       }
@@ -46,13 +46,14 @@ export class ErrorRecoveryMiddleware {
       } catch (error) {
         await ErrorRecoveryService.handleButtonError(
           interaction, 
-          error as Error,
+          error instanceof Error ? error : new Error(String(error)),
           { customId: interaction.customId }
         )
 
         // Handle conversation-specific errors
-        if (error.message.includes('conversation') || error.message.includes('state')) {
-          await ConversationRecoveryService.handleBrokenConversation(interaction, error as Error)
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        if (errorMessage.includes('conversation') || errorMessage.includes('state')) {
+          await ConversationRecoveryService.handleBrokenConversation(interaction, error instanceof Error ? error : new Error(String(error)))
         }
       }
     }
@@ -67,13 +68,14 @@ export class ErrorRecoveryMiddleware {
       } catch (error) {
         await ErrorRecoveryService.handleModalError(
           interaction, 
-          error as Error,
+          error instanceof Error ? error : new Error(String(error)),
           { customId: interaction.customId }
         )
 
         // Handle conversation-specific errors
-        if (error.message.includes('conversation') || error.message.includes('state')) {
-          await ConversationRecoveryService.handleBrokenConversation(interaction, error as Error)
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        if (errorMessage.includes('conversation') || errorMessage.includes('state')) {
+          await ConversationRecoveryService.handleBrokenConversation(interaction, error instanceof Error ? error : new Error(String(error)))
         }
       }
     }
@@ -88,10 +90,11 @@ export class ErrorRecoveryMiddleware {
     } catch (error) {
       console.error('Operation failed, checking if it was Gemini-related:', error)
       
-      if (error.message.includes('Gemini') || error.message.includes('AI')) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      if (errorMessage.includes('Gemini') || errorMessage.includes('AI')) {
         console.log('Detected Gemini error, using fallback if available')
         if (fallback) {
-          return await fallback(error.message)
+          return await fallback(errorMessage)
         }
       }
       
