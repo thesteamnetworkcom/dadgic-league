@@ -1,0 +1,7 @@
+# Ignore backup files but keep directory
+*.json
+*.sql
+*.dump
+
+# Keep the .gitkeep file
+!.gitkeep

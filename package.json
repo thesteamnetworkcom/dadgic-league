@@ -15,7 +15,12 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "db:migrate": "npm run db:migrate --workspace=packages/database",
+    "db:status": "npm run db:status --workspace=packages/database",
+    "db:backup": "npm run db:backup --workspace=packages/database",
+    "migrate:up": "npm run migrate:up --workspace=packages/database",
+    "migrate:history": "npm run migrate:history --workspace=packages/database"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",

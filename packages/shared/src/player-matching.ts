@@ -4,6 +4,7 @@ import type { ParsedPlayer as AIParsedPlayer } from './ai-parser.js'
 
 export interface PlayerMatchResult {
   matchedPlayers: Array<{
+    id: string                     // ADDED: Include UUID
     name: string
     discord_username: string
     commander: string
@@ -39,6 +40,7 @@ export async function findPlayerMatches(
       
       if (matchResult.match) {
         matchedPlayers.push({
+          id: matchResult.match.id,        // ADDED: Include UUID from database
           name: matchResult.match.name,
           discord_username: matchResult.match.discord_username,
           commander: aiPlayer.commander,
