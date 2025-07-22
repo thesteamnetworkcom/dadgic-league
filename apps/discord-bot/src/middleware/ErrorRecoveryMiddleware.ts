@@ -7,7 +7,7 @@ import {
   ErrorRecoveryService, 
   ConversationRecoveryService,
   GeminiRetryService
-} from '../services/error-recovery'
+} from '../services/error-recovery/index.js'
 
 type InteractionHandler<T> = (interaction: T) => Promise<void>
 
