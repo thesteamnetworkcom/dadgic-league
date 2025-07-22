@@ -1,2 +1,2 @@
-export { ErrorLogger } from './ErrorLogger'
-export type { ErrorContext, LoggedError } from './ErrorLogger'
+export { ErrorLogger } from './ErrorLogger.js'
+export type { ErrorContext, LoggedError } from './ErrorLogger.js'

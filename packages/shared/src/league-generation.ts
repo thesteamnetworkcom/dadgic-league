@@ -2,7 +2,7 @@
 // packages/shared/src/league-generation.ts
 // =====================================================
 
-import { generatePodPairings } from './pod-generation';
+import { generatePodPairings } from './pod-generation.js';
 import { LeagueQueries, PlayerQueries } from '@dadgic/database';
 
 export interface CreateLeagueRequest {
