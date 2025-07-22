@@ -25,7 +25,8 @@
     "monitor:errors": "npm run monitor:errors --workspace=packages/shared", 
     "monitor:stats": "npm run monitor:stats --workspace=packages/shared",
     "build:shared": "turbo run build --filter=@dadgic/shared",
-    "build:web": "turbo run build --filter=@dadgic/web"
+    "build:web": "turbo run build --filter=@dadgic/web",
+    "build:discord":"turbo run build --filter=@dadgic/discord-bot"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
