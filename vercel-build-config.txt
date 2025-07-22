@@ -1,0 +1,13 @@
+Framework Preset: Next.js
+Root Directory: apps/web
+Build Command: npm run build
+Output Directory: .next
+Install Command: npm install
+
+Environment Variables (add these in Vercel dashboard):
+- NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+- SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+- NEXTAUTH_URL=https://your-domain.vercel.app
+- NEXTAUTH_SECRET=your-generated-secret
+- DISCORD_CLIENT_ID=your-discord-client-id
+- DISCORD_CLIENT_SECRET=your-discord-client-secret
