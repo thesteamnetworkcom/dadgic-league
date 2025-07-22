@@ -23,7 +23,9 @@
     "migrate:history": "npm run migrate:history --workspace=packages/database",
     "monitor:health": "npm run monitor:health --workspace=packages/shared",
     "monitor:errors": "npm run monitor:errors --workspace=packages/shared", 
-    "monitor:stats": "npm run monitor:stats --workspace=packages/shared"
+    "monitor:stats": "npm run monitor:stats --workspace=packages/shared",
+    "build:shared": "turbo run build --filter=@dadgic/shared",
+    "build:web": "turbo run build --filter=@dadgic/web"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
