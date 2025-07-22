@@ -25,7 +25,7 @@ import { ErrorRecoveryMiddleware } from './middleware/ErrorRecoveryMiddleware.js
 import { 
   GeminiRetryService,
   ConversationRecoveryService
-} from './services/error-recovery';
+} from './services/error-recovery/index.js';
 
 // Override the supabase client for Discord bot
 import { createClient } from '@supabase/supabase-js';
