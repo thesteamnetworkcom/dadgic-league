@@ -18,7 +18,7 @@ import {
 import { findPlayerMatches } from '@dadgic/shared';
 import { db } from '@dadgic/database';
 import type { ParsedPodData } from '@dadgic/shared';
-import { DiscordBotMonitoring } from './services/monitoring/DiscordBotMonitoring'
+import { DiscordBotMonitoring } from './services/monitoring/DiscordBotMonitoring.js'
 
 // Import error recovery services
 import { ErrorRecoveryMiddleware } from './middleware/ErrorRecoveryMiddleware';
