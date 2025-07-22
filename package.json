@@ -20,7 +20,10 @@
     "db:status": "npm run db:status --workspace=packages/database",
     "db:backup": "npm run db:backup --workspace=packages/database",
     "migrate:up": "npm run migrate:up --workspace=packages/database",
-    "migrate:history": "npm run migrate:history --workspace=packages/database"
+    "migrate:history": "npm run migrate:history --workspace=packages/database",
+    "monitor:health": "npm run monitor:health --workspace=packages/shared",
+    "monitor:errors": "npm run monitor:errors --workspace=packages/shared", 
+    "monitor:stats": "npm run monitor:stats --workspace=packages/shared"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",

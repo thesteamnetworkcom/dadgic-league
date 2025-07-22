@@ -11,7 +11,11 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "monitor": "tsx src/monitoring/cli/monitor.ts",
+    "monitor:health": "tsx src/monitoring/cli/monitor.ts health",
+    "monitor:errors": "tsx src/monitoring/cli/monitor.ts errors",
+    "monitor:stats": "tsx src/monitoring/cli/monitor.ts stats"
   },
   "dependencies": {
     "@dadgic/database": "file:../database"
