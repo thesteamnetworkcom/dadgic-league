@@ -21,7 +21,7 @@ import type { ParsedPodData } from '@dadgic/shared';
 import { DiscordBotMonitoring } from './services/monitoring/DiscordBotMonitoring.js'
 
 // Import error recovery services
-import { ErrorRecoveryMiddleware } from './middleware/ErrorRecoveryMiddleware';
+import { ErrorRecoveryMiddleware } from './middleware/ErrorRecoveryMiddleware.js';
 import { 
   GeminiRetryService,
   ConversationRecoveryService
