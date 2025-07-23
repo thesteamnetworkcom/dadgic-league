@@ -1,19 +1,27 @@
-// packages/shared/src/index.ts
-// Export everything from ai-parser
-//// DEPRECATED: export * from './ai-parser.js' // Use AIParsingService instead
+// ============================================================================
+// SHARED PACKAGE EXPORTS - Clean Structure
+// ============================================================================
 
-// Export player matching
-export * from './player-matching.js'
+// Types (most important)
+export * from './types';
 
-export * from './pod-generation.js';
-export * from './league-generation.js';
-// Monitoring exports
-export { ErrorLogger } from './monitoring/error-logger/ErrorLogger.js'
-export { HealthChecker } from './monitoring/health-checks/HealthChecker.js'
-export type { ErrorContext, LoggedError } from './monitoring/error-logger/ErrorLogger.js'
-export type { HealthCheck, SystemHealth } from './monitoring/health-checks/HealthChecker.js'
+// Services  
+export * from './services';
 
-export * from './services'
-export * from './types/api'
-export * from './utils/errors/APIError'
-export * from './utils/validation'
+// Utilities
+export * from './utils';
+
+// Errors
+export * from './errors';
+
+// Monitoring (existing - keep as-is for now)
+export { ErrorLogger } from './monitoring/error-logger/ErrorLogger.js';
+export { HealthChecker } from './monitoring/health-checks/HealthChecker.js';
+export type { ErrorContext, LoggedError } from './monitoring/error-logger/ErrorLogger.js';
+export type { HealthCheck, SystemHealth } from './monitoring/health-checks/HealthChecker.js';
+
+// Legacy exports (for backward compatibility)
+// These will be gradually removed as we update imports
+//export * from './player-matching.js';
+//export * from './pod-generation.js';
+//export * from './league-generation.js';

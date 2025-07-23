@@ -3,7 +3,7 @@
 // ============================================================================
 
 import { db } from '@dadgic/database'
-import { APIError, ValidationError } from '../utils/errors/APIError'
+import { APIError, ValidationError } from '../errors/APIError'
 import type { 
   CreateGameRequest, 
   CreateGameResponse, 

@@ -3,7 +3,7 @@
 // ============================================================================
 
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import { APIError } from '../utils/errors/APIError'
+import { APIError } from '../errors/APIError'
 import type { 
   AIParseRequest, 
   AIParseResponse, 

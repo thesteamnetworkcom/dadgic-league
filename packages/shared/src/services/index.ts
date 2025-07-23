@@ -1,31 +1,11 @@
 // ============================================================================
-// Shared Services - Central Export Point
+// SERVICES - Central Export Point
 // ============================================================================
 
-// AI Services
-export { AIParsingService, getAIParsingService, parseWithAI } from './AIParsingService'
+export { LeagueGenerationService } from './league-generation';
+export { PodGenerationService } from './pod-generation';
+export { AIParsingService, parseWithAI } from './ai-parsing';
+export { PlayerMatchingService } from './player-matching';
 
-// Game Services
-export { GameService, getGameService } from './GameService'
-
-// Player Services  
-export { PlayerService, getPlayerService } from './PlayerService'
-
-// Utility exports
-export { APIError, ValidationError, handleAPIError } from '../utils/errors/APIError'
-export { validate, validateAIParseRequest } from '../utils/validation'
-
-// Re-export types for convenience
-export type { 
-  AIParseRequest, 
-  AIParseResponse, 
-  ParsedGameData, 
-  ParsedPlayer,
-  CreateGameRequest,
-  CreateGameResponse,
-  CreatedGame,
-  GamePlayer,
-  CreatePlayerRequest,
-  CreatePlayerResponse,
-  Player
-} from '../types/api'
+// Legacy exports (deprecated)
+export { parseWithAI as parseWithAI } from './ai-parsing';
