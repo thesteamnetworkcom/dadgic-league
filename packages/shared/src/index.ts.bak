@@ -1,6 +1,6 @@
 // packages/shared/src/index.ts
 // Export everything from ai-parser
-//// DEPRECATED: export * from './ai-parser.js' // Use AIParsingService instead
+//export * from './ai-parser.js'
 
 // Export player matching
 export * from './player-matching.js'
