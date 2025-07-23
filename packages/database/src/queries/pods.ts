@@ -1,150 +1,127 @@
-// packages/database/src/queries/pods.ts
-import { supabase } from '../client';
-import { Pod, PodWithParticipants, CreatePodInput, UpdatePodInput } from '../types';
-import { LeagueQueries } from './leagues';
+import { BaseQueries } from './base';
+import type { ClientType } from '../client-factory';
+import type { 
+  Pod, 
+  PodWithParticipants,
+  GameCreateResolved, 
+} from '../types';
 
-export class PodQueries {
-  static async getAll(): Promise<PodWithParticipants[]> {
-    const { data, error } = await supabase
-      .from('pods')
-      .select(`
-        *,
-        participants:pod_participants(
-          *,
-          player:players(*)
-        )
-      `)
-      .order('date', { ascending: false });
-    
-    if (error) throw error;
-    return data as PodWithParticipants[];
-  }
+export class PodQueries extends BaseQueries {
+  static async create(input: GameCreateResolved, clientType: ClientType = 'user'): Promise<PodWithParticipants> {
+    this.validateRequired(input.league_id, 'league_id');
+    this.validateRequired(input.date, 'date');
 
-  static async getById(id: string): Promise<PodWithParticipants | null> {
-    const { data, error } = await supabase
-      .from('pods')
-      .select(`
-        *,
-        participants:pod_participants(
-          *,
-          player:players(*)
-        )
-      `)
-      .eq('id', id)
-      .single();
+    const supabase = this.getClient(clientType);
     
-    if (error) {
-      if (error.code === 'PGRST116') return null;
-      throw error;
-    }
-    return data as PodWithParticipants;
-  }
-
-  static async getByLeague(leagueId: string): Promise<PodWithParticipants[]> {
-    const { data, error } = await supabase
-      .from('pods')
-      .select(`
-        *,
-        participants:pod_participants(
-          *,
-          player:players(*)
-        )
-      `)
-      .eq('league_id', leagueId)
-      .order('date', { ascending: false });
-    
-    if (error) throw error;
-    return data as PodWithParticipants[];
-  }
-
-  static async create(input: CreatePodInput): Promise<PodWithParticipants> {
-    // Start by creating the pod
-    const { data: pod, error: podError } = await supabase
-      .from('pods')
-      .insert({
-        league_id: input.league_id || null,
-        date: input.date,
-        game_length_minutes: input.game_length_minutes || null,
-        turns: input.turns || null,
-        winning_commander: input.winning_commander || null,
-        participant_count: input.participants.length,
-        notes: input.notes || null
-      })
-      .select()
-      .single();
-    
-    if (podError) throw podError;
-    
-    // Insert participants
-    const { data: participants, error: participantsError } = await supabase
-      .from('pod_participants')
-      .insert(
-        input.participants.map(p => ({
-          pod_id: pod.id,
-          player_id: p.player_id,
-          commander_deck: p.commander_deck,
-          result: p.result
-        }))
-      )
-      .select(`
-        *,
-        player:players(*)
-      `);
-    
-    if (participantsError) throw participantsError;
     try {
-    const playerIds = input.participants.map(p => p.player_id);
-    const matchingScheduledPod = await LeagueQueries.findMatchingScheduledPod(playerIds);
-    
-    if (matchingScheduledPod) {
-      await LeagueQueries.markPodComplete(matchingScheduledPod.id, pod.id);
-      console.log(`✅ Pod automatically linked to league: ${matchingScheduledPod.league_id}`);
-    }
-  } catch (matchError) {
-    console.error('Error checking for league matches:', matchError);
-    // Don't fail pod creation if matching fails
-  }
-    return {
-      ...pod,
-      participants: participants as any
-    };
-  }
+      const { data: pod, error } = await supabase
+        .from('pods')
+        .insert({
+          league_id: input.league_id,
+          date: input.date,
+          game_length_minutes: input.game_length_minutes,
+          turns: input.turns,
+          notes: input.notes
+        })
+        .select()
+        .single();
 
-  static async update(id: string, updates: UpdatePodInput): Promise<Pod> {
-    const { data, error } = await supabase
-      .from('pods')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
-  }
-
-  static async delete(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('pods')
-      .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
-  }
-
-  static async getRecent(limit: number = 10): Promise<PodWithParticipants[]> {
-    const { data, error } = await supabase
-      .from('pods')
-      .select(`
-        *,
-        participants:pod_participants(
-          *,
-          player:players(*)
+      const { data: participants, error: participantsError } = await supabase
+        .from('pod_participants')
+        .insert(
+          input.participants.map(p => ({
+            pod_id: pod.id,
+            player_id: p.player_id,
+            commander_deck: p.commander_deck,
+            result: p.result
+          }))
         )
-      `)
-      .order('date', { ascending: false })
-      .limit(limit);
+        .select('*, player:players(*)'); 
+
+      if (error) {
+        this.handleError(error, 'create pod');
+      }
+
+      return pod as PodWithParticipants;
+    } catch (error) {
+      this.handleError(error, 'create pod');
+    }
+  }
+
+  static async update(
+    id: string, 
+    updates: Partial<Pod>, 
+    clientType: ClientType = 'user'
+  ): Promise<Pod> {
+    this.validateRequired(id, 'pod id');
+
+    const supabase = this.getClient(clientType);
     
-    if (error) throw error;
-    return data as PodWithParticipants[];
+    try {
+      const { data, error } = await supabase
+        .from('pods')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        this.handleError(error, 'update pod');
+      }
+
+      return data as Pod;
+    } catch (error) {
+      this.handleError(error, 'update pod');
+    }
+  }
+
+  static async getById(id: string, clientType: ClientType = 'user'): Promise<PodWithParticipants | null> {
+    this.validateRequired(id, 'pod id');
+
+    const supabase = this.getClient(clientType);
+    
+    try {
+      const { data, error } = await supabase
+        .from('pods')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return null; // Not found
+        }
+        this.handleError(error, 'get pod by id');
+      }
+
+      return data as PodWithParticipants;
+    } catch (error) {
+      this.handleError(error, 'get pod by id');
+    }
+  }
+
+  static async getByLeague(
+    leagueId: string, 
+    clientType: ClientType = 'user'
+  ): Promise<Pod[]> {
+    this.validateRequired(leagueId, 'league id');
+
+    const supabase = this.getClient(clientType);
+    
+    try {
+      const { data, error } = await supabase
+        .from('pods')
+        .select('*')
+        .eq('league_id', leagueId)
+        .order('date', { ascending: true });
+
+      if (error) {
+        this.handleError(error, 'get pods by league');
+      }
+
+      return data as Pod[];
+    } catch (error) {
+      this.handleError(error, 'get pods by league');
+    }
   }
 }

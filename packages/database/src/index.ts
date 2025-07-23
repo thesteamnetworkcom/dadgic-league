@@ -1,23 +1,23 @@
-// packages/database/src/index.ts
+// ============================================================================
+// DATABASE PACKAGE EXPORTS
+// ============================================================================
 
-// Export all types
+// Types (re-exported from shared)
 export * from './types';
 
-// Export the client (in case you need direct access)
-export * from './client';
-
-// Export all query classes
-export * from './queries/players';
+// Query classes (will be updated to use new types)
 export * from './queries/pods';
+export * from './queries/players';
 export * from './queries/leagues';
 
-// Main database object for easy importing
-import { PlayerQueries } from './queries/players';
+// Legacy client (deprecated)
+export { supabase } from './client';
+
+// Main database interface
 import { PodQueries } from './queries/pods';
-import { LeagueQueries } from './queries/leagues';
+import { PlayerQueries } from './queries/players';
 
 export const db = {
-  players: PlayerQueries,
   pods: PodQueries,
-  leagues: LeagueQueries
+  players: PlayerQueries,
 };
