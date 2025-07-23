@@ -10,6 +10,7 @@ import type {
   CreatedGame,
   GamePlayer
 } from '../types/api'
+import type { PodWithParticipants, PodParticipant, Player } from '../types';
 
 export class GameService {
   async createGame(request: CreateGameRequest, userId?: string): Promise<CreateGameResponse> {
@@ -85,7 +86,7 @@ export class GameService {
       }
 
       // Get participants with player details
-      const participants = await db.pods.getParticipants(gameId)
+      const participants = pod.participants
       
       const players: GamePlayer[] = participants.map(p => ({
         id: p.id,
