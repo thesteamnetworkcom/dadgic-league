@@ -1,5 +1,11 @@
 // src/lib/gemini.ts
 import { GoogleGenerativeAI } from '@google/generative-ai'
+// Add at the very top of the file
+import { config } from 'dotenv'
+import { join } from 'path'
+
+// Force load environment variables
+config({ path: join(process.cwd(), '.env.local') })
 
 // Types for AI parsing
 export interface ParsedPodData {
@@ -28,6 +34,12 @@ class GeminiService {
   private model: any
 
   constructor() {
+    console.log('🔍 GeminiService Constructor Debug:')
+  console.log('  - Current working directory:', process.cwd())
+  console.log('  - NODE_ENV:', process.env.NODE_ENV)
+  console.log('  - GEMINI_API_KEY exists:', !!process.env.GEMINI_API_KEY)
+  console.log('  - Total env vars count:', Object.keys(process.env).length)
+  console.log('  - Env vars with GEMINI:', Object.keys(process.env).filter(k => k.includes('GEMINI')))
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
       throw new Error('GEMINI_API_KEY is required')

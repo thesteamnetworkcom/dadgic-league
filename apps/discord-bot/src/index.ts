@@ -17,7 +17,7 @@ import {
 } from 'discord.js';
 import { findPlayerMatches } from '@dadgic/shared';
 import { db } from '@dadgic/database';
-import type { ParsedPodData } from '@dadgic/shared';
+import type { ParsedGameData } from '@dadgic/shared';
 import { DiscordBotMonitoring } from './services/monitoring/DiscordBotMonitoring.js'
 
 // Import error recovery services
@@ -45,7 +45,7 @@ const activeConversations = new Map<string, ConversationState>();
 
 interface ConversationState {
   originalInput: string;
-  parsedData: ParsedPodData;
+  parsedData: ParsedGameData;
   matchedPlayers: Array<{
     name: string;
     discord_username: string;
@@ -212,7 +212,7 @@ const handleReportCommand = ErrorRecoveryMiddleware.wrapCommandHandler(
 );
 
 // Your original helper functions with error recovery integration
-function analyzeMissingData(parsedData: ParsedPodData, matchedPlayers: any[]): any {
+function analyzeMissingData(parsedData: ParsedGameData, matchedPlayers: any[]): any {
   return {
     commanders: matchedPlayers.filter(p => !p.commander || p.commander.toLowerCase().includes('unknown')).map(p => p.name),
     gameLength: !parsedData.game_length_minutes,

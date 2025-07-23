@@ -1,4 +1,4 @@
-// src/app/report/page.tsx - Updated to use server-side AI API
+// src/app/report/page.tsx - Complete with AI Parsing Restored
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -6,10 +6,10 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { PlusIcon, TrashIcon, TrophyIcon } from '@/components/icons'
 import { db } from '@dadgic/database'
+import { parseWithAI } from '@/lib/gemini'
 import type { CreatePodInput } from '@dadgic/database'
 import AppLayout from '@/components/AppLayout'
 import { ErrorLogger } from '@dadgic/shared'
-import { aiAPI } from '@/lib/api/aiAPI'
 
 // Form-specific types
 interface PodPlayerForm {
@@ -68,7 +68,7 @@ export default function ReportPod() {
   }
 
   // ============================================================================
-  // FIXED AI PARSING - Uses server-side API with proper environment access!
+  // RESTORED FUNCTIONS: AI Parsing and Form Logic
   // ============================================================================
 
   const handleAIParse = async () => {
@@ -80,30 +80,16 @@ export default function ReportPod() {
     setAiError(null)
     
     try {
-      console.log('🤖 Starting AI parse via API...')
+      const result = await parseWithAI(aiInput.trim())
       
-      // Call server-side API (no more environment variable issues!)
-      const result = await aiAPI.parseGameText({
-        text: aiInput.trim(),
-        context: {
-          user_id: user?.id
-        }
-      })
-
       if (!result.success) {
         setAiError(result.error || 'Failed to parse game description')
         return
       }
-
       if (!result.data) {
         setAiError('No data returned from AI')
         return
       }
-
-      console.log('✅ AI parsing successful:', {
-        confidence: result.data.confidence,
-        playersFound: result.data.players.length
-      })
       
       // Populate form with AI results
       setDate(result.data.date)
@@ -120,15 +106,13 @@ export default function ReportPod() {
       
       setPlayers(formPlayers)
       setMode('structured')
-      setError(null)
       
     } catch (error) {
-      console.error('❌ AI parsing error:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Failed to parse game description'
-      setAiError(errorMessage)
+      console.error('AI parsing error:', error)
+      setAiError('Failed to parse game description')
       
-      // Log error with monitoring
-      await ErrorLogger.logError(error instanceof Error ? error : new Error(errorMessage), {
+      // Log error with monitoring integration
+      await ErrorLogger.logError(error instanceof Error ? error : new Error('AI parsing failed'), {
         component: 'web-report',
         action: 'ai-parse',
         userId: user?.id,
@@ -140,7 +124,22 @@ export default function ReportPod() {
     }
   }
 
-  // Rest of your existing functions (handleSubmit, validation, etc.)
+  const addPlayer = () => {
+    setPlayers([...players, { discord_username: '', commander_deck: '', result: 'lose' }])
+  }
+
+  const removePlayer = (index: number) => {
+    if (players.length > 1) {
+      setPlayers(players.filter((_, i) => i !== index))
+    }
+  }
+
+  const updatePlayer = (index: number, field: keyof PodPlayerForm, value: string) => {
+    const updated = [...players]
+    updated[index] = { ...updated[index], [field]: value }
+    setPlayers(updated)
+  }
+
   const validateForm = (): string | null => {
     if (!date) return 'Date is required'
     if (players.length < 2) return 'At least 2 players are required'
@@ -207,7 +206,7 @@ export default function ReportPod() {
       const errorMessage = error instanceof Error ? error.message : 'Failed to submit pod report'
       setError(errorMessage)
       
-      // Log error with monitoring
+      // Log error with monitoring integration
       await ErrorLogger.logError(error instanceof Error ? error : new Error(errorMessage), {
         component: 'web-report',
         action: 'submit-game',
@@ -223,23 +222,10 @@ export default function ReportPod() {
     }
   }
 
-  const addPlayer = () => {
-    setPlayers([...players, { discord_username: '', commander_deck: '', result: 'lose' }])
-  }
+  // ============================================================================
+  // RENDER
+  // ============================================================================
 
-  const removePlayer = (index: number) => {
-    if (players.length > 1) {
-      setPlayers(players.filter((_, i) => i !== index))
-    }
-  }
-
-  const updatePlayer = (index: number, field: keyof PodPlayerForm, value: string) => {
-    const updated = [...players]
-    updated[index] = { ...updated[index], [field]: value }
-    setPlayers(updated)
-  }
-
-  // Render (keeping existing UI)
   if (loading) {
     return (
       <AppLayout showNavigation={false}>
@@ -251,7 +237,7 @@ export default function ReportPod() {
   }
 
   if (!user) {
-    return null
+    return null // Will redirect to home
   }
 
   return (
@@ -343,7 +329,7 @@ export default function ReportPod() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Your existing structured form JSX here - keeping it the same */}
+              {/* Game Info Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-neutral-300 mb-2">
@@ -356,7 +342,118 @@ export default function ReportPod() {
                     className="w-full bg-neutral-700 border border-neutral-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
-                {/* Add other form fields as needed */}
+                
+                <div>
+                  <label className="block text-sm font-medium text-neutral-300 mb-2">
+                    Game Length (minutes)
+                  </label>
+                  <input
+                    type="number"
+                    value={gameLengthMinutes}
+                    onChange={(e) => setGameLengthMinutes(e.target.value ? Number(e.target.value) : '')}
+                    placeholder="Optional"
+                    className="w-full bg-neutral-700 border border-neutral-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-neutral-300 mb-2">
+                    Total Turns
+                  </label>
+                  <input
+                    type="number"
+                    value={turns}
+                    onChange={(e) => setTurns(e.target.value ? Number(e.target.value) : '')}
+                    placeholder="Optional"
+                    className="w-full bg-neutral-700 border border-neutral-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              {/* Players Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium text-white">Players</h3>
+                  <button
+                    type="button"
+                    onClick={addPlayer}
+                    className="flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white px-3 py-2 rounded-lg transition-colors"
+                  >
+                    <PlusIcon className="w-4 h-4" />
+                    Add Player
+                  </button>
+                </div>
+
+                {players.map((player, index) => (
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-neutral-700/50 rounded-lg">
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-300 mb-1">
+                        Discord Username
+                      </label>
+                      <input
+                        type="text"
+                        value={player.discord_username}
+                        onChange={(e) => updatePlayer(index, 'discord_username', e.target.value)}
+                        placeholder="@username"
+                        className="w-full bg-neutral-600 border border-neutral-500 rounded px-3 py-2 text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-300 mb-1">
+                        Commander Deck
+                      </label>
+                      <input
+                        type="text"
+                        value={player.commander_deck}
+                        onChange={(e) => updatePlayer(index, 'commander_deck', e.target.value)}
+                        placeholder="Deck name/commander"
+                        className="w-full bg-neutral-600 border border-neutral-500 rounded px-3 py-2 text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-300 mb-1">
+                        Result
+                      </label>
+                      <select
+                        value={player.result}
+                        onChange={(e) => updatePlayer(index, 'result', e.target.value as 'win' | 'lose' | 'draw')}
+                        className="w-full bg-neutral-600 border border-neutral-500 rounded px-3 py-2 text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      >
+                        <option value="lose">Lose</option>
+                        <option value="win">Win</option>
+                        <option value="draw">Draw</option>
+                      </select>
+                    </div>
+                    
+                    <div className="flex items-end">
+                      <button
+                        type="button"
+                        onClick={() => removePlayer(index)}
+                        disabled={players.length <= 1}
+                        className="flex items-center gap-1 text-red-400 hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed px-2 py-2"
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">
+                  Notes (Optional)
+                </label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Additional notes about the game..."
+                  rows={3}
+                  className="w-full bg-neutral-700 border border-neutral-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                />
               </div>
 
               {/* Submit Button */}
