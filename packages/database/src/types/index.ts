@@ -1,2 +1,2 @@
 // Types - Single Import Point
-export * from './core';
+export * from './core.js';

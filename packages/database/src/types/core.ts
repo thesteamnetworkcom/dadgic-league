@@ -1,7 +1,7 @@
 // ============================================================================
 // CORE TYPES - Single Source of Truth
 // ============================================================================
-
+export * from './api/index.js'
 export interface Player {
   id: string;
   name: string;
@@ -174,3 +174,5 @@ export interface GameParseResult {
   confidence?: number;
   processing_time_ms?: number;
 }
+
+

@@ -79,7 +79,7 @@ export class PlayerQueries extends BaseQueries {
   static async findByDiscordUsername(
     username: string, 
     clientType: ClientType = 'user'
-  ): Promise<Player[]> {
+  ): Promise<Player | null> {
     this.validateRequired(username, 'discord username');
 
     const supabase = this.getClient(clientType);
@@ -88,13 +88,17 @@ export class PlayerQueries extends BaseQueries {
       const { data, error } = await supabase
         .from('players')
         .select('*')
-        .ilike('discord_username', `%${username}%`);
+        .ilike('discord_username', username)
+        .single();
 
       if (error) {
+        if (error.code === 'PGRST118') {
+          throw new Error(`Data integrity error: Multiple players found with Discord username "${username}"`);
+        }
         this.handleError(error, 'find players by discord username');
       }
 
-      return data as Player[];
+      return data as Player;
     } catch (error) {
       this.handleError(error, 'find players by discord username');
     }
