@@ -278,6 +278,29 @@ export class PlayerService {
       errors
     }
   }
+    static async validateAndGetPlayerIds(players: { discord_username: string }[]): Promise<string[]> {
+      const playerIds: string[] = []
+  
+      for (let i = 0; i < players.length; i++) {
+        const playerInput = players[i]
+        
+        // Try to find player by discord username or name
+        const foundPlayer = await db.players.findByDiscordUsername(playerInput.discord_username)
+  
+        if (!foundPlayer) {
+          throw new ValidationError(`Player not found: ${playerInput.discord_username}`, [
+            { 
+              field: `players[${i}].discord_username`, 
+              message: `Player "${playerInput.discord_username}" not found in database. Please add them first.`
+            }
+          ])
+        }
+  
+        playerIds.push(foundPlayer.id)
+      }
+  
+      return playerIds
+    }  
 }
 
 // Export singleton instance

@@ -8,9 +8,12 @@ import type {
   CreateGameRequest, 
   CreateGameResponse, 
   CreatedGame,
-  GamePlayer
-} from '../types/api'
-import type { PodWithParticipants, PodParticipant, Player } from '../types';
+  GamePlayer,
+  PodWithParticipants,
+  PodParticipant,
+  Player
+} from '@dadgic/database'
+
 
 export class GameService {
   async createGame(request: CreateGameRequest, userId?: string): Promise<CreateGameResponse> {
@@ -80,7 +83,7 @@ export class GameService {
 
   async getGameById(gameId: string): Promise<CreatedGame> {
     try {
-      const pod = await db.pods.getById(gameId)
+      const pod : PodWithParticipants | null = await db.pods.getById(gameId)
       if (!pod) {
         throw new APIError('Game not found', 'NOT_FOUND', 404)
       }
@@ -218,8 +221,7 @@ export class GameService {
       const playerInput = players[i]
       
       // Try to find player by discord username or name
-      const foundPlayer = await db.players.findByDiscordUsername(playerInput.discord_username) ||
-                          await db.players.findByName(playerInput.discord_username)
+      const foundPlayer = await db.players.findByDiscordUsername(playerInput.discord_username)
 
       if (!foundPlayer) {
         throw new ValidationError(`Player not found: ${playerInput.discord_username}`, [

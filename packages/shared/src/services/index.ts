@@ -8,10 +8,9 @@ export { GameService, getGameService } from './GameService'
 export { PlayerService, getPlayerService } from './PlayerService'
 
 // Utility exports
-export { APIError, ValidationError, handleAPIError } from '../utils/errors/APIError'
-export { validate, validateAIParseRequest } from '../utils/validation'
+export { validate, validateAIParseRequest } from '../utils/validation/index.js'
 
-// Re-export database types (no duplicates!)
+// Re-export ALL types from database package (single source of truth)
 export type { 
   Player,
   Pod,
@@ -21,17 +20,17 @@ export type {
   LeagueWithProgress,
   CreatePodInput,
   CreateLeagueInput,
-  UpdatePodInput,
-  PlayerStats
+  PlayerStats,
+  ScheduledPod,
+  // AI Types (should be moved to database package)
+  AIParseRequest,
+  AIParseResponse,
+  ParsedGameData,
+  ParsedPlayer
 } from '@dadgic/database'
 
-// Re-export shared API types only for AI parsing
-export type { 
-  AIParseRequest, 
-  AIParseResponse, 
-  ParsedGameData, 
-  ParsedPlayer
-} from '../types/api'
-
+// TODO: Move AI types (AIParseRequest, AIParseResponse, etc.) to database package
+// TODO: Remove packages/shared/src/types/api folder entirely 
+// TODO: Update AIParsingService to import types from database
 // TODO: Create LeagueService to handle league generation logic
 // TODO: Move remaining logic from league-generation.ts and player-matching.ts
