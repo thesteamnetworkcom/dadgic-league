@@ -2,8 +2,6 @@
 // Validation Utilities
 // ============================================================================
 
-import { ValidationError } from '../errors/APIError'
-
 export interface ValidationResult {
   isValid: boolean
   errors: { field: string; message: string }[]

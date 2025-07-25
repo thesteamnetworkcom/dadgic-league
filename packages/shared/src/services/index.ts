@@ -4,8 +4,8 @@
 
 // Real Services (Complete implementations)
 export { AIParsingService, getAIParsingService, parseWithAI } from './AIParsingService'
-export { GameService, getGameService } from './GameService'
-export { PlayerService, getPlayerService } from './PlayerService'
+export * from './GameService'
+export * from './PlayerService'
 
 // Utility exports
 export { validate, validateAIParseRequest } from '../utils/validation/index.js'

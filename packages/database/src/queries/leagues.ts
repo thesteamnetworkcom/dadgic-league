@@ -1,6 +1,6 @@
 // packages/database/src/queries/leagues.ts
 import { supabase } from '../client';
-import { League, LeagueWithProgress, CreateLeagueInput, ScheduledPod } from '../types';
+import { League, LeagueWithProgress, CreateLeagueInput, ScheduledPod, PodWithParticipants } from '../types';
 
 export class LeagueQueries {
   // Add to LeagueQueries class in packages/database/src/queries/leagues.ts
@@ -47,22 +47,8 @@ static async getLeagueInfo(scheduledPodId: string): Promise<{leagueName: string,
     leagueName: league?.name || 'Unknown League'
   };
 }
-  // ADD THIS NEW METHOD for admin check
-  static async isCurrentUserAdmin(): Promise<boolean> {
-  const { data: { user } } = await supabase.auth.getUser();
-  console.log('Current user from auth:', user);
-  if (!user) return false;
+  
 
-  const { data, error } = await supabase
-    .from('players')
-    .select('role, id, name')
-    .eq('discord_id', user.user_metadata?.provider_id) // ← Change this line
-    .single();
-
-  console.log('Player lookup result:', data, error);
-  if (error) return false;
-  return data?.role === 'admin';
-}
 
   static async getAll(): Promise<LeagueWithProgress[]> {
     const { data, error } = await supabase
@@ -213,7 +199,7 @@ static async getLeagueInfo(scheduledPodId: string): Promise<{leagueName: string,
     if (error) throw error;
   }
 
-  static async getLeagueStandings(leagueId: string): Promise<any[]> {
+  static async getPodsWithParticipants(leagueId: string): Promise<PodWithParticipants[]> {
     // Get all completed pods for this league
     const { data, error } = await supabase
       .from('pods')
@@ -228,46 +214,7 @@ static async getLeagueInfo(scheduledPodId: string): Promise<{leagueName: string,
     
     if (error) throw error;
     
-    // Calculate standings
-    const playerStats: Record<string, any> = {};
-    
-    data.forEach(pod => {
-      pod.participants.forEach((participant: any) => {
-        const playerId = participant.player_id;
-        const playerName = participant.player?.name || 'Unknown';
-        
-        if (!playerStats[playerId]) {
-          playerStats[playerId] = {
-            player_id: playerId,
-            player_name: playerName,
-            games_played: 0,
-            wins: 0,
-            losses: 0,
-            draws: 0,
-            win_rate: 0
-          };
-        }
-        
-        playerStats[playerId].games_played++;
-        
-        if (participant.result === 'win') playerStats[playerId].wins++;
-        else if (participant.result === 'lose') playerStats[playerId].losses++;
-        else if (participant.result === 'draw') playerStats[playerId].draws++;
-      });
-    });
-    
-    // Calculate win rates and sort by wins, then win rate
-    const standings = Object.values(playerStats).map((stats: any) => ({
-      ...stats,
-      win_rate: stats.games_played > 0 ? stats.wins / stats.games_played : 0
-    }));
-    
-    standings.sort((a: any, b: any) => {
-      if (a.wins !== b.wins) return b.wins - a.wins;
-      return b.win_rate - a.win_rate;
-    });
-    
-    return standings;
+    return data;
   }
 
   static async update(id: string, updates: Partial<CreateLeagueInput>): Promise<League> {

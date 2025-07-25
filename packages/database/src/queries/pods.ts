@@ -7,7 +7,7 @@ import type {
 } from '../types';
 
 export class PodQueries extends BaseQueries {
-  static async create(input: GameCreateResolved, clientType: ClientType = 'user'): Promise<PodWithParticipants> {
+  static async create(input: GameCreateResolved, clientType: ClientType = 'user'): Promise<Pod> {
     this.validateRequired(input.league_id, 'league_id');
     this.validateRequired(input.date, 'date');
 
@@ -75,7 +75,7 @@ export class PodQueries extends BaseQueries {
     }
   }
 
-  static async getById(id: string, clientType: ClientType = 'user'): Promise<PodWithParticipants | null> {
+  static async getById(id: string, clientType: ClientType = 'user'): Promise<Pod | null> {
     this.validateRequired(id, 'pod id');
 
     const supabase = this.getClient(clientType);

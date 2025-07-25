@@ -18,4 +18,23 @@ export abstract class BaseQueries {
       throw new Error(`${fieldName} is required`);
     }
   }
+
+  // ADD THIS NEW METHOD for admin check
+    static async isCurrentUserAdmin(): Promise<boolean> {
+    const { data: { user } } = await this.getClient().auth.getUser();
+    console.log('Current user from auth:', user);
+    if (!user) return false;
+  
+    const { data, error } = await this.getClient()
+      .from('players')
+      .select('role, id, name')
+      .eq('discord_id', user.user_metadata?.provider_id) // ← Change this line
+      .single();
+  
+    console.log('Player lookup result:', data, error);
+    if (error) return false;
+    return data?.role === 'admin';
+  }
 }
+
+

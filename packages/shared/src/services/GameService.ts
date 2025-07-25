@@ -13,10 +13,10 @@ import type {
   PodParticipant,
   Player
 } from '@dadgic/database'
+import { getPlayerIds } from './PlayerService'
+import { validateGameRequest } from '../utils/validation/game'
 
-
-export class GameService {
-  async createGame(request: CreateGameRequest, userId?: string): Promise<CreateGameResponse> {
+export async function createGame(request: CreateGameRequest, userId?: string): Promise<CreateGameResponse> {
     try {
       console.log('🎮 Creating game:', {
         date: request.date,
@@ -25,13 +25,13 @@ export class GameService {
       })
 
       // Validate request
-      const validation = this.validateGameRequest(request)
+      const validation = validateGameRequest(request)
       if (!validation.isValid) {
         throw new ValidationError('Invalid game data', validation.errors)
       }
 
       // Find and validate all players exist
-      const playerIds = await this.validateAndGetPlayerIds(request.players)
+      const playerIds = await getPlayerIds(request.players)
 
       // Create the pod/game record
       const podData = {
@@ -49,7 +49,7 @@ export class GameService {
       const createdPod = await db.pods.create(podData)
 
       // Get full game data with player details
-      const gameWithPlayers = await this.getGameById(createdPod.id)
+      const gameWithPlayers = await getGameById(createdPod.id)
 
       console.log('✅ Game created successfully:', {
         gameId: createdPod.id,
@@ -81,7 +81,7 @@ export class GameService {
     }
   }
 
-  async getGameById(gameId: string): Promise<CreatedGame> {
+export async function getGameById(gameId: string): Promise<CreatedGame> {
     try {
       const pod : PodWithParticipants | null = await db.pods.getById(gameId)
       if (!pod) {
@@ -116,7 +116,7 @@ export class GameService {
     }
   }
 
-  async listGames(filters: {
+ export async function listGames(filters: {
     playerId?: string
     leagueId?: string
     dateFrom?: string
@@ -138,7 +138,7 @@ export class GameService {
 
       // Get full game data for each pod
       const games = await Promise.all(
-        pods.map(pod => this.getGameById(pod.id))
+        pods.map(pod => getGameById(pod.id))
       )
 
       return games
@@ -149,12 +149,12 @@ export class GameService {
     }
   }
 
-  async deleteGame(gameId: string, userId?: string): Promise<void> {
+export async function deleteGame(gameId: string, userId?: string): Promise<void> {
     try {
       console.log('🗑️ Deleting game:', { gameId, userId })
 
       // Check if game exists
-      await this.getGameById(gameId)
+      await getGameById(gameId)
 
       // Delete the game (participants will be deleted via cascade)
       await db.pods.delete(gameId)
@@ -172,79 +172,3 @@ export class GameService {
     }
   }
 
-  private validateGameRequest(request: CreateGameRequest): { isValid: boolean; errors: { field: string; message: string }[] } {
-    const errors: { field: string; message: string }[] = []
-
-    if (!request.date) {
-      errors.push({ field: 'date', message: 'Date is required' })
-    }
-
-    if (!request.players || !Array.isArray(request.players)) {
-      errors.push({ field: 'players', message: 'Players array is required' })
-    } else if (request.players.length < 2) {
-      errors.push({ field: 'players', message: 'At least 2 players are required' })
-    } else if (request.players.length > 8) {
-      errors.push({ field: 'players', message: 'Maximum 8 players allowed' })
-    } else {
-      // Validate each player
-      request.players.forEach((player, index) => {
-        if (!player.discord_username?.trim()) {
-          errors.push({ field: `players[${index}].discord_username`, message: `Player ${index + 1} username is required` })
-        }
-        if (!player.commander_deck?.trim()) {
-          errors.push({ field: `players[${index}].commander_deck`, message: `Player ${index + 1} commander is required` })
-        }
-        if (!['win', 'lose', 'draw'].includes(player.result)) {
-          errors.push({ field: `players[${index}].result`, message: `Player ${index + 1} result must be win, lose, or draw` })
-        }
-      })
-
-      // Validate exactly one winner (unless all draws)
-      const winners = request.players.filter(p => p.result === 'win')
-      const allDraws = request.players.every(p => p.result === 'draw')
-      
-      if (!allDraws && winners.length !== 1) {
-        errors.push({ field: 'players', message: 'Exactly one player must win (unless all draw)' })
-      }
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors
-    }
-  }
-
-  private async validateAndGetPlayerIds(players: { discord_username: string }[]): Promise<string[]> {
-    const playerIds: string[] = []
-
-    for (let i = 0; i < players.length; i++) {
-      const playerInput = players[i]
-      
-      // Try to find player by discord username or name
-      const foundPlayer = await db.players.findByDiscordUsername(playerInput.discord_username)
-
-      if (!foundPlayer) {
-        throw new ValidationError(`Player not found: ${playerInput.discord_username}`, [
-          { 
-            field: `players[${i}].discord_username`, 
-            message: `Player "${playerInput.discord_username}" not found in database. Please add them first.`
-          }
-        ])
-      }
-
-      playerIds.push(foundPlayer.id)
-    }
-
-    return playerIds
-  }
-}
-
-// Export singleton instance
-let gameService: GameService | null = null
-
-export function getGameService(): GameService {
-  if (!gameService) {
-    gameService = new GameService()
-  }
-  return gameService
-}

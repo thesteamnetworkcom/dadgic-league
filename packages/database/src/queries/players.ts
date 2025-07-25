@@ -103,4 +103,101 @@ export class PlayerQueries extends BaseQueries {
       this.handleError(error, 'find players by discord username');
     }
   }
+
+  static async findById(
+    playerId: string, 
+    clientType: ClientType = 'user'
+  ): Promise<Player | null> {
+    this.validateRequired(playerId, 'player id');
+
+    const supabase = this.getClient(clientType);
+    
+    try {
+      const { data, error } = await supabase
+        .from('players')
+        .select('*')
+        .eq('id', playerId)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return null; // Not found
+        }
+        this.handleError(error, 'find player by id');
+      }
+
+      return data as Player;
+    } catch (error) {
+      this.handleError(error, 'find player by id');
+    }
+  }
+  
+  static async list(filters: {
+    search?: string
+    limit?: number
+    offset?: number
+  } = {}, clientType: ClientType = 'user'): Promise<Player[]> {
+    const supabase = this.getClient(clientType);
+    
+    try {
+      let query = supabase
+        .from('players')
+        .select('*');
+
+      // Add search filter if provided
+      if (filters.search && filters.search.trim().length > 0) {
+        const searchTerm = filters.search.trim();
+        query = query.or(`name.ilike.%${searchTerm}%,discord_username.ilike.%${searchTerm}%`);
+      }
+
+      // Add pagination
+      if (filters.limit) {
+        query = query.limit(filters.limit);
+      }
+      
+      if (filters.offset) {
+        query = query.range(filters.offset, (filters.offset + (filters.limit || 100)) - 1);
+      }
+
+      // Always order by name for consistent results
+      query = query.order('name');
+
+      const { data, error } = await query;
+
+      if (error) {
+        this.handleError(error, 'list players');
+      }
+
+      return data as Player[];
+    } catch (error) {
+      this.handleError(error, 'list players');
+    }
+  }
+
+  static async update(
+    playerId: string, 
+    updates: Partial<CreatePlayerInput>, 
+    clientType: ClientType = 'user'
+  ): Promise<Player> {
+    this.validateRequired(playerId, 'player id');
+
+    const supabase = this.getClient(clientType);
+    
+    try {
+      const { data, error } = await supabase
+        .from('players')
+        .update(updates)
+        .eq('id', playerId)
+        .select()
+        .single();
+
+      if (error) {
+        this.handleError(error, 'update player');
+      }
+
+      return data as Player;
+    } catch (error) {
+      this.handleError(error, 'update player');
+    }
+  }
 }
