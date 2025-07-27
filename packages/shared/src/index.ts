@@ -1,26 +1,27 @@
 // ============================================================================
-// SHARED PACKAGE EXPORTS - Clean Structure
+// SHARED PACKAGE EXPORTS - Now imports types from DATABASE
 // ============================================================================
 
-// Types (most important)
+// TYPES - Import from database (single source of truth)
+export * from '@dadgic/database';
 
-// Services  
-export * from './services';
+// SERVICES (Updated to use database types)
+export * from './services/PlayerService';
+export * from './services/PodService'; // RENAMED: GameService → PodService
+export * from './services/AIParsingService';
+export * from './services/PlayerMatchingService';
 
-// Utilities
-export * from './utils';
+// UTILITIES
+export * from './errors/APIError';
+export * from './utils/validation';
 
-// Errors
-export * from './errors';
-
-// Monitoring (existing - keep as-is for now)
+// MONITORING (existing - keep as-is for now)
 export { ErrorLogger } from './monitoring/error-logger/ErrorLogger.js';
 export { HealthChecker } from './monitoring/health-checks/HealthChecker.js';
 export type { ErrorContext, LoggedError } from './monitoring/error-logger/ErrorLogger.js';
 export type { HealthCheck, SystemHealth } from './monitoring/health-checks/HealthChecker.js';
 
-// Legacy exports (for backward compatibility)
-// These will be gradually removed as we update imports
-//export * from './player-matching.js';
-//export * from './pod-generation.js';
-//export * from './league-generation.js';
+// ============================================================================
+// NOTE: All types now come from @dadgic/database package
+// Services have been updated to use Pod terminology instead of Game
+// ============================================================================

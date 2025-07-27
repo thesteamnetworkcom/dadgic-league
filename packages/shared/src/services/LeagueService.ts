@@ -7,8 +7,10 @@ import type { CreateLeagueInput, LeagueWithProgress } from '@dadgic/database'
 import { APIError, ValidationError } from '../errors/APIError'
 import { validateLeagueInput } from '../utils/validation/league'
 import { validateCurrentUserIsAdmin } from '../utils/validation/auth'
+import { generatePodPairings } from './PodGenerationService'
 
 // Temporarily duplicate until we sort out type organization
+// TODO: Fix type organization and remove these duplicates
 export interface CreateLeagueRequest {
   name: string
   description?: string

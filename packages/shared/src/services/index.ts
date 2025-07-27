@@ -4,7 +4,7 @@
 
 // Real Services (Complete implementations)
 export { AIParsingService, getAIParsingService, parseWithAI } from './AIParsingService'
-export * from './GameService'
+export * from './PodService'
 export * from './PlayerService'
 
 // Utility exports
