@@ -3,11 +3,10 @@
 // ============================================================================
 
 import { ResponseBase } from '../common/base';
-import { Player, League } from '../entities';
-import { PodDisplay } from '../pods';
+import { Player, League, Pod } from '../entities';
 
 // Standard CRUD responses
-export interface CreatePodResponse extends ResponseBase<PodDisplay> {}
+export interface CreatePodResponse extends ResponseBase<Pod> {}
 export interface CreatePlayerResponse extends ResponseBase<Player> {}
 export interface CreateLeagueResponse extends ResponseBase<League> {}
 
@@ -22,7 +21,7 @@ export interface ListResponse<T> extends ResponseBase<T[]> {
 }
 
 export interface ListPlayersResponse extends ListResponse<Player> {}
-export interface ListPodsResponse extends ListResponse<PodDisplay> {}
+export interface ListPodsResponse extends ListResponse<Pod> {}
 export interface ListLeaguesResponse extends ListResponse<League> {}
 
 // ============================================================================

@@ -17,8 +17,8 @@ export interface ParsedPodData {
   participants: ParticipantInput[];
 }
 
-export interface ParseResponse extends ResponseBase<ParsedPodData> {
-  data?: ParsedPodData & {
+export interface ParseResponse<T = any> extends ResponseBase<T> {
+  data?: T & {
     confidence: number;
     processing_time_ms: number;
   };

@@ -3,11 +3,11 @@ import type { ClientType } from '../client-factory';
 import type { 
   Pod, 
   PodWithParticipants,
-  GameCreateResolved, 
+  PodResolved,
 } from '../types';
 
 export class PodQueries extends BaseQueries {
-  static async create(input: GameCreateResolved, clientType: ClientType = 'user'): Promise<Pod> {
+  static async create(input: PodResolved, clientType: ClientType = 'user'): Promise<Pod> {
     this.validateRequired(input.league_id, 'league_id');
     this.validateRequired(input.date, 'date');
 
@@ -42,7 +42,7 @@ export class PodQueries extends BaseQueries {
         this.handleError(error, 'create pod');
       }
 
-      return pod as PodWithParticipants;
+      return pod;
     } catch (error) {
       this.handleError(error, 'create pod');
     }

@@ -11,20 +11,22 @@ import type {
   CreatePodResponse, 
   PodDisplay,
   PodWithParticipants,
+  PodInput,
   PodParticipant,
   Player
 } from '@dadgic/database'
 
-import { validatePodResolved } from '../utils/validation/pod'
+import { validatePodResolved, validatePodRequest } from '../utils/validation/pod'
+import { resolveParticipants } from './PlayerMatchingService'
 
 // ============================================================================
 // POD CRUD OPERATIONS (Game → Pod terminology)
 // ============================================================================
 
 /**
- * Create a new pod (expects resolved participants with player_ids)
+ * Create a new pod (now takes unresolved participants with player_identifiers)
  */
-export async function createPod(podData: PodResolved, userId?: string): Promise<CreatePodResponse> {
+export async function createPod(podData: PodInput, userId?: string): Promise<CreatePodResponse> {
   try {
     console.log('🎮 Creating pod:', {
       date: podData.date,
@@ -32,36 +34,46 @@ export async function createPod(podData: PodResolved, userId?: string): Promise<
       userId
     })
 
-    // ✅ VALIDATE: PodService validates the resolved pod structure
-    const validation = validatePodResolved(podData)
-    if (!validation.isValid) {
-      throw new ValidationError('Invalid resolved pod data', validation.errors)
+    // 1. VALIDATE UNRESOLVED POD DATA
+    const initialValidation = validatePodRequest(podData)
+    if (!initialValidation.isValid) {
+      throw new ValidationError('Invalid pod request data', initialValidation.errors)
     }
 
-    // ✅ EXPECTS RESOLVED DATA: Participants already have player_ids
-    // PlayerMatchingService should resolve participants before calling this service
+    // 2. RESOLVE PARTICIPANTS (player_identifier → player_id)
+    console.log('🔄 Resolving participants through PlayerMatchingService')
+    const resolvedParticipants = await resolveParticipants(podData.participants)
 
-    // Create the pod record directly with resolved data
-    const createdPod = await db.pods.create({
+    // Create resolved pod data
+    const resolvedPodData: PodResolved = {
       date: podData.date,
-      league_id: podData.league_id,
-      game_length_minutes: podData.game_length_minutes || null,
-      turns: podData.turns || null,
-      notes: podData.notes?.trim() || null,
-      participants: podData.participants
-    })
+      league_id: podData.league_id ?? null,
+      game_length_minutes: podData.game_length_minutes ?? null,
+      turns: podData.turns ?? null,
+      notes: podData.notes ?? null,
+      participants: resolvedParticipants
+    }
 
-    // Get full pod data with participant details
-    const podWithParticipants = await getPodById(createdPod.id)
+    // 3. VALIDATE RESOLVED POD DATA  
+    const resolvedValidation = validatePodResolved(resolvedPodData)
+    if (!resolvedValidation.isValid) {
+      throw new ValidationError('Invalid resolved pod data', resolvedValidation.errors)
+    }
 
-    console.log('✅ Pod created successfully:', {
-      podId: createdPod.id,
-      participantsCount: podWithParticipants.participants.length
+    // 4. CALL QUERY FUNCTION
+    console.log('💾 Creating pod in database')
+    const createdPod = await db.pods.create({
+      date: resolvedPodData.date,
+      league_id: resolvedPodData.league_id,
+      game_length_minutes: resolvedPodData.game_length_minutes || null,
+      turns: resolvedPodData.turns || null,
+      notes: resolvedPodData.notes?.trim() || null,
+      participants: resolvedPodData.participants
     })
 
     return {
       success: true,
-      data: podWithParticipants,
+      data: createdPod,
       timestamp: new Date().toISOString()
     }
 
@@ -193,7 +205,7 @@ export async function deletePod(podId: string, userId?: string): Promise<void> {
 // ============================================================================
 
 export class PodService {
-  async createPod(podData: PodResolved, userId?: string) {
+  async createPod(podData: PodInput, userId?: string) {
     return createPod(podData, userId)
   }
 
@@ -225,7 +237,7 @@ export function getPodService(): PodService {
 // ============================================================================
 
 /** @deprecated Use createPod instead */
-export async function createGame(podData: PodResolved, userId?: string): Promise<CreatePodResponse> {
+export async function createGame(podData: PodInput, userId?: string): Promise<CreatePodResponse> {
   return createPod(podData, userId)
 }
 

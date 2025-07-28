@@ -5,10 +5,10 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { APIError } from '../errors/APIError'
 import type { 
-  AIParseRequest, 
-  AIParseResponse, 
-  ParsedGameData 
-} from '../types/api'
+  ParseRequest, 
+  ParseResponse, 
+  ParsedPodData 
+} from '@dadgic/database'
 
 export class AIParsingService {
   private genAI: GoogleGenerativeAI
@@ -58,7 +58,7 @@ export class AIParsingService {
     }
   }
 
-  async parseGameText(request: AIParseRequest): Promise<AIParseResponse> {
+  async parsePodText(request: ParseRequest): Promise<ParseResponse> {
     const startTime = Date.now()
     
     try {
@@ -74,7 +74,7 @@ export class AIParsingService {
       console.log('✅ AI Parse Success:', {
         confidence: parseResult.confidence,
         processingTimeMs: processingTime,
-        playersFound: parseResult.players.length
+        playersFound: parseResult.participants.length
       })
 
       return {
@@ -107,7 +107,7 @@ export class AIParsingService {
     }
   }
 
-  private validateInput(request: AIParseRequest): void {
+  private validateInput(request: ParseRequest): void {
     if (!request.text || typeof request.text !== 'string') {
       throw new APIError('Game description text is required', 'INVALID_INPUT', 400)
     }
@@ -131,7 +131,7 @@ export class AIParsingService {
     }
   }
 
-  private async parseWithRetry(text: string): Promise<ParsedGameData & { confidence: number }> {
+  private async parseWithRetry(text: string): Promise<ParsedPodData & { confidence: number }> {
     let lastError: Error | null = null
 
     for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
@@ -223,7 +223,7 @@ OUTPUT FORMAT (JSON ONLY, NO MARKDOWN):
 CRITICAL: Return ONLY valid JSON with no markdown formatting.`
   }
 
-  private parseAIResponse(responseText: string): ParsedGameData {
+  private parseAIResponse(responseText: string): ParsedPodData {
     try {
       let cleanJson = responseText.trim()
       
@@ -248,7 +248,7 @@ CRITICAL: Return ONLY valid JSON with no markdown formatting.`
         throw new Error('Parsed result is not a valid object')
       }
       
-      return parsed as ParsedGameData
+      return parsed as ParsedPodData
       
     } catch (error) {
       console.error('❌ Failed to parse AI response:', {
@@ -264,26 +264,26 @@ CRITICAL: Return ONLY valid JSON with no markdown formatting.`
     }
   }
 
-  private validateParsedData(data: ParsedGameData): void {
+  private validateParsedData(data: ParsedPodData): void {
     const errors: string[] = []
     
     if (!data.date || typeof data.date !== 'string') {
       errors.push('Missing or invalid date field')
     }
     
-    if (!data.players || !Array.isArray(data.players)) {
+    if (!data.participants || !Array.isArray(data.participants)) {
       errors.push('Missing or invalid players array')
-    } else if (data.players.length < 2) {
+    } else if (data.participants.length < 2) {
       errors.push('Game must have at least 2 players')
-    } else if (data.players.length > 8) {
+    } else if (data.participants.length > 8) {
       errors.push('Game cannot have more than 8 players')
     } else {
-      data.players.forEach((player, index) => {
-        if (!player.name || typeof player.name !== 'string' || player.name.trim().length === 0) {
+      data.participants.forEach((player, index) => {
+        if (!player.player_identifier || typeof player.player_identifier !== 'string' || player.player_identifier.trim().length === 0) {
           errors.push(`Player ${index + 1}: name is required`)
         }
         
-        if (!player.commander || typeof player.commander !== 'string' || player.commander.trim().length === 0) {
+        if (!player.commander_deck || typeof player.commander_deck !== 'string' || player.commander_deck.trim().length === 0) {
           errors.push(`Player ${index + 1}: commander is required`)
         }
         
@@ -292,8 +292,8 @@ CRITICAL: Return ONLY valid JSON with no markdown formatting.`
         }
       })
       
-      const winners = data.players.filter(p => p.result === 'win')
-      const allDraws = data.players.every(p => p.result === 'draw')
+      const winners = data.participants.filter(p => p.result === 'win')
+      const allDraws = data.participants.every(p => p.result === 'draw')
       
       if (!allDraws && winners.length !== 1) {
         errors.push(`Expected exactly 1 winner, found ${winners.length}`)
@@ -309,20 +309,20 @@ CRITICAL: Return ONLY valid JSON with no markdown formatting.`
     }
   }
 
-  private calculateConfidence(data: ParsedGameData, originalText: string): number {
+  private calculateConfidence(data: ParsedPodData, originalText: string): number {
     let confidence = 0.6
 
     if (data.game_length_minutes && data.game_length_minutes > 0) confidence += 0.1
     if (data.turns && data.turns > 0) confidence += 0.05
     if (data.notes && data.notes.trim().length > 5) confidence += 0.1
-    if (data.players.length >= 3 && data.players.length <= 4) confidence += 0.1
+    if (data.participants.length >= 3 && data.participants.length <= 4) confidence += 0.1
     
-    const avgCommanderLength = data.players.reduce((sum, p) => sum + p.commander.length, 0) / data.players.length
+    const avgCommanderLength = data.participants.reduce((sum, p) => sum + p.commander_deck.length, 0) / data.participants.length
     if (avgCommanderLength > 8) confidence += 0.1
     
-    const hasGenericNames = data.players.some(p => 
-      /^(player|user|person)\s*\d*$/i.test(p.name) || 
-      /^(unknown|test|sample)$/i.test(p.commander)
+    const hasGenericNames = data.participants.some(p => 
+      /^(player|user|person)\s*\d*$/i.test(p.player_identifier) || 
+      /^(unknown|test|sample)$/i.test(p.commander_deck)
     )
     if (hasGenericNames) confidence -= 0.2
 
@@ -331,7 +331,7 @@ CRITICAL: Return ONLY valid JSON with no markdown formatting.`
 
   async healthCheck() {
     try {
-      const testResult = await this.parseGameText({
+      const testResult = await this.parsePodText({
         text: 'Quick test: Alice won with Atraxa, Bob lost with Krenko',
         context: { source: 'web' }
       })
@@ -364,7 +364,7 @@ export function getAIParsingService(): AIParsingService {
   return aiParsingService
 }
 
-export async function parseWithAI(text: string, context?: any): Promise<AIParseResponse> {
+export async function parseWithAI(request: ParseRequest): Promise<ParseResponse> {
   const service = getAIParsingService()
-  return service.parseGameText({ text, context })
+  return service.parsePodText(request)
 }

@@ -14,11 +14,12 @@ export interface PodPlayersResolved extends PodBase {
   participants: ParticipantResolved[];
 }
 export interface PodResolved extends PodBase {
-  league_id: string;
+  league_id: string | null;
   date: string;
   game_length_minutes: number | null;
   turns: number | null;
   notes: string | null;
+  participants: ParticipantResolved[];
 }
 // Display variant - for UI with full player details
 export interface PodDisplay extends PodBase {
