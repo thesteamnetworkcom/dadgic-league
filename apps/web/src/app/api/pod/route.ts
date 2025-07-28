@@ -1,10 +1,11 @@
 // apps/web/src/app/api/pod/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { handleAPIError } from '@dadgic/shared/errors/APIError'
-import { validatePodRequest } from '@dadgic/shared/utils/validation/pod'
-import { getAIParsingService } from '@dadgic/shared/services/AIParsingService'
-import { createPod } from '@dadgic/shared/services/PodService'
+import { handleAPIError } from '@dadgic/shared'
+import { validatePodRequest } from '@dadgic/shared'
+import { getAIParsingService } from '@dadgic/shared'
+import { createPod } from '@dadgic/shared'
 import type { PodInput } from '@dadgic/database'
+
 
 export async function POST(request: NextRequest) {
   try {
