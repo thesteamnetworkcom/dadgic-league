@@ -9,12 +9,17 @@ import { ParticipantInput, ParticipantResolved, ParticipantDisplay } from '../pa
 export interface PodInput extends PodBase {
   participants: ParticipantInput[];
 }
-
 // Resolved variant - after player lookup, ready for database
-export interface PodResolved extends PodBase {
+export interface PodPlayersResolved extends PodBase {
   participants: ParticipantResolved[];
 }
-
+export interface PodResolved extends PodBase {
+  league_id: string;
+  date: string;
+  game_length_minutes: number | null;
+  turns: number | null;
+  notes: string | null;
+}
 // Display variant - for UI with full player details
 export interface PodDisplay extends PodBase {
   id: string;
