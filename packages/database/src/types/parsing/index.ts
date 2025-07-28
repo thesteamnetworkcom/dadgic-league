@@ -22,6 +22,12 @@ export interface ParseResponse<T = any> extends ResponseBase<T> {
     confidence: number;
     processing_time_ms: number;
   };
+  conversationState?: {
+    conversationId: string;
+    originalText: string;
+    parsedData: any;
+    timestamp: string;
+  };
 }
 
 // ============================================================================

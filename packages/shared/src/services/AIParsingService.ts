@@ -68,7 +68,12 @@ export class AIParsingService {
       })
 
       this.validateInput(request)
-      const parseResult = await this.parseWithRetry(request.text)
+      const context = request.context?.metadata?.conversationState ? {
+        existingData: request.context.metadata.conversationState.parsedData,
+        operation: 'update' as const,
+        domain: 'pod' as const
+      } : undefined
+      const parseResult = await this.parseWithRetry(request.text, context)
       const processingTime = Date.now() - startTime
 
       console.log('✅ AI Parse Success:', {
@@ -77,14 +82,38 @@ export class AIParsingService {
         playersFound: parseResult.participants.length
       })
 
-      return {
-        success: true,
-        data: {
-          ...parseResult,
-          confidence: parseResult.confidence,
-          processing_time_ms: processingTime
-        },
-        timestamp: new Date().toISOString()
+      if (request.context?.metadata?.conversationState) {
+  // Update case - merge with existing state
+        return {
+          success: true,
+          data: {
+            ...parseResult,
+            confidence: parseResult.confidence,
+            processing_time_ms: processingTime
+          },
+          conversationState: {
+            ...request.context.metadata.conversationState, // Keep existing conversationId, originalText
+            parsedData: parseResult, // Update with new parsed data
+            timestamp: new Date().toISOString() // Update timestamp
+          },
+          timestamp: new Date().toISOString()
+        }
+      } else {
+        // Initial case - create new state
+        return {
+          success: true,
+          data: { ...parseResult,
+            confidence: parseResult.confidence,
+            processing_time_ms: processingTime
+          },
+          conversationState: {
+            conversationId: crypto.randomUUID(),
+            originalText: request.text,
+            parsedData: parseResult,
+            timestamp: new Date().toISOString()
+          },
+          timestamp: new Date().toISOString()
+        }
       }
 
     } catch (error) {
@@ -109,14 +138,14 @@ export class AIParsingService {
 
   private validateInput(request: ParseRequest): void {
     if (!request.text || typeof request.text !== 'string') {
-      throw new APIError('Game description text is required', 'INVALID_INPUT', 400)
+      throw new APIError('Pod description text is required', 'INVALID_INPUT', 400)
     }
 
     const text = request.text.trim()
     
     if (text.length < 10) {
       throw new APIError(
-        'Game description must be at least 10 characters long',
+        'Pod description must be at least 10 characters long',
         'INPUT_TOO_SHORT',
         400
       )
@@ -124,21 +153,21 @@ export class AIParsingService {
 
     if (text.length > 5000) {
       throw new APIError(
-        'Game description must be less than 5000 characters',
+        'Pod description must be less than 5000 characters',
         'INPUT_TOO_LONG',
         400
       )
     }
   }
 
-  private async parseWithRetry(text: string): Promise<ParsedPodData & { confidence: number }> {
+  private async parseWithRetry(text: string, context?: any): Promise<ParsedPodData & { confidence: number }> {
     let lastError: Error | null = null
 
     for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
       try {
         console.log(`🔄 AI Parse Attempt ${attempt}/${this.maxRetries}`)
 
-        const prompt = this.buildPrompt(text)
+        const prompt = this.buildPrompt({text, context})
         
         const timeoutPromise = new Promise<never>((_, reject) => {
           setTimeout(() => reject(new Error('AI request timeout')), this.timeoutMs)
@@ -191,8 +220,87 @@ export class AIParsingService {
       503
     )
   }
+  private buildPrompt(options: {
+    text: string
+    context?: {
+      existingData?: any
+      operation?: 'parse' | 'update' | 'correct'
+      domain?: 'pod' | 'player' | 'league'
+    }
+  }): string {
+    // Handle domain - start with pod only
+    const domain = options.context?.domain || 'pod'
+    if (domain !== 'pod') {
+      throw new Error(`Domain ${domain} not implemented yet`)
+    }
 
-  private buildPrompt(text: string): string {
+    // Handle operation
+    const operation = options.context?.operation || 'parse'
+    if (operation === 'parse') {
+      return this.buildPodParsePrompt(options.text)
+    } else {
+    // Check context exists before passing existingData
+      if (!options.context?.existingData) {
+        throw new Error('Update operation requires existing data')
+      }
+      return this.buildPodUpdatePrompt(options.text, options.context.existingData)
+    }
+  }
+  private buildPodUpdatePrompt(text: string, existingData: any): string {
+    const currentData = JSON.stringify(existingData, null, 2)
+  
+    return `You are updating MTG Commander game data. Here's the current information:
+
+            CURRENT DATA:
+            ${currentData}
+
+            UPDATE REQUEST:
+            "${text}"
+
+            INSTRUCTIONS:
+            1. Update the existing data with the new information
+            2. Keep the same JSON structure
+            3. Return ONLY the updated JSON data
+            4. Handle commander info intelligently (e.g., "Milan and Kevin both played Elminster")
+            5. Preserve existing data unless specifically updated
+            6. Maintain exactly one winner unless explicitly changed
+            7. Player identifiers should remain consistent with existing data
+
+            OUTPUT FORMAT: Valid JSON only, no explanation text.`
+  }
+  private buildPodParsePrompt(text: string): string {
+    // Move the existing buildPrompt logic here
+    const currentDate = new Date().toISOString().split('T')[0]
+  
+    return `You are a Magic: The Gathering Commander game parser. Parse this game description into structured JSON.
+
+              GAME DESCRIPTION: "${text}"
+
+              PARSING RULES:
+              1. Extract game date (if not mentioned, use today: ${currentDate})
+              2. Identify all players and their commanders
+              3. Determine who won/lost (exactly ONE winner per game)
+              4. Extract optional: game length (minutes), turn count, notes
+              5. Player names can be casual (Scott, Mike) or usernames
+              6. Commander names can be partial (Atraxa = "Atraxa, Praetors' Voice")
+
+              OUTPUT FORMAT (JSON ONLY, NO MARKDOWN):
+              {
+                "date": "YYYY-MM-DD",
+                "game_length_minutes": 90,
+                "turns": 12,
+                "notes": "Brief summary",
+                "players": [
+                  { "name": "Scott", "commander": "Atraxa, Praetors' Voice", "result": "win" },
+                  { "name": "Mike", "commander": "Krenko, Mob Boss", "result": "lose" },
+                  { "name": "Sarah", "commander": "Meren of Clan Nel Toth", "result": "lose" }
+                ]
+              }
+
+              CRITICAL: Return ONLY valid JSON with no markdown formatting.` 
+  }
+
+  /*private buildPrompt(text: string): string {
     const currentDate = new Date().toISOString().split('T')[0]
     
     return `You are a Magic: The Gathering Commander game parser. Parse this game description into structured JSON.
@@ -221,7 +329,7 @@ OUTPUT FORMAT (JSON ONLY, NO MARKDOWN):
 }
 
 CRITICAL: Return ONLY valid JSON with no markdown formatting.`
-  }
+  }*/
 
   private parseAIResponse(responseText: string): ParsedPodData {
     try {
