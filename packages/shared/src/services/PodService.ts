@@ -13,7 +13,8 @@ import type {
   PodWithParticipants,
   PodInput,
   PodParticipant,
-  Player
+  Player,
+  Pod
 } from '@dadgic/database'
 
 import { validatePodResolved, validatePodRequest } from '../utils/validation/pod'
@@ -70,6 +71,8 @@ export async function createPod(podData: PodInput, userId?: string): Promise<Cre
       notes: resolvedPodData.notes?.trim() || null,
       participants: resolvedPodData.participants
     })
+
+    await checkScheduledPodCompletion(createdPod)
 
     return {
       success: true,
@@ -199,6 +202,65 @@ export async function deletePod(podId: string, userId?: string): Promise<void> {
     throw new APIError(`Failed to delete pod: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
+
+/**
+ * Check Scheduled Pod Completion (For League matching)
+ */
+export async function checkScheduledPodCompletion(pod: PodWithParticipants): Promise<void> {
+  try {
+    console.log('🔍 Checking for scheduled pod match:', { podId: pod.id })
+    
+    // 1. Extract and sort player IDs
+    const playerIds = pod.participants.map(p => p.player_id).sort()
+    console.log('👥 Player IDs for matching:', playerIds)
+    
+    // 2. Find matching scheduled pod
+    const scheduledPod = await db.scheduledPods.findByPlayers(playerIds)
+    
+    if (!scheduledPod) {
+      console.log('ℹ️ No matching scheduled pod found')
+      return
+    }
+
+    console.log('✅ Found matching scheduled pod:', { 
+      scheduledPodId: scheduledPod.id, 
+      leagueId: scheduledPod.league_id 
+    })
+
+    // 3. Update pod with league_id
+    await db.pods.update(pod.id, { league_id: scheduledPod.league_id })
+    console.log('📝 Updated pod with league_id:', scheduledPod.league_id)
+
+    // 4. Mark scheduled pod as completed
+    await db.scheduledPods.markCompleted(scheduledPod.id, pod.id)
+    console.log('✅ Marked scheduled pod as completed')
+
+    // 5. Check if league is now complete
+    await checkLeagueCompletion(scheduledPod.league_id)
+
+  } catch (error) {
+    // Don't break pod creation if this fails
+    console.error('⚠️ Scheduled pod completion failed:', error)
+    // Consider: Should we throw here or just log? Current decision: just log
+  }
+}
+
+export async function checkLeagueCompletion(leagueId: string): Promise<void> {
+  try {
+    const incompleteCount = await db.scheduledPods.countIncomplete(leagueId)
+    console.log(`📊 League ${leagueId} has ${incompleteCount} incomplete scheduled pods`)
+    
+    if (incompleteCount === 0) {
+      await db.leagues.updateStatus(leagueId, 'completed')
+      console.log(`🏆 League ${leagueId} marked as completed!`)
+      
+      // TODO: Add notifications, stats calculations, etc.
+    }
+  } catch (error) {
+    console.error('⚠️ League completion check failed:', error)
+  }
+}
+
 
 // ============================================================================
 // SERVICE INSTANCE PATTERN (for compatibility)

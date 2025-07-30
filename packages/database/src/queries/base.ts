@@ -20,15 +20,14 @@ export abstract class BaseQueries {
   }
 
   // ADD THIS NEW METHOD for admin check
-    static async isCurrentUserAdmin(): Promise<boolean> {
-    const { data: { user } } = await this.getClient().auth.getUser();
-    console.log('Current user from auth:', user);
-    if (!user) return false;
+    static async isCurrentUserAdmin(userId?: string): Promise<boolean> {
+    console.log('Current user from auth:', userId);
+    if (!userId) return false;
   
     const { data, error } = await this.getClient()
       .from('players')
       .select('role, id, name')
-      .eq('discord_id', user.user_metadata?.provider_id) // ← Change this line
+      .eq('id', userId) // ← Change this line
       .single();
   
     console.log('Player lookup result:', data, error);

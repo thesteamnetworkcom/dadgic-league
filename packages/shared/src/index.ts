@@ -8,8 +8,10 @@ export * from '@dadgic/database';
 // SERVICES (Updated to use database types)
 export * from './services/PlayerService';
 export * from './services/PodService'; // RENAMED: GameService → PodService
+export * from './services/LeagueService';
 export * from './services/AIParsingService';
 export * from './services/PlayerMatchingService';
+export * from './services/PodGenerationService';
 
 // UTILITIES
 export * from './errors/APIError';

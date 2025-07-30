@@ -3,119 +3,117 @@
 // ============================================================================
 
 import { db } from '@dadgic/database'
-import type { CreateLeagueInput, LeagueWithProgress } from '@dadgic/database'
+import type { CreateLeagueResponse, League, LeagueDisplay, LeagueInput, LeagueResolved, LeagueWithProgress } from '@dadgic/database'
 import { APIError, ValidationError } from '../errors/APIError'
-import { validateLeagueInput } from '../utils/validation/league'
+import { validateLeagueRequest, validateLeagueResolved } from '../utils/validation/league'
 import { validateCurrentUserIsAdmin } from '../utils/validation/auth'
 import { generatePodPairings } from './PodGenerationService'
-
-// Temporarily duplicate until we sort out type organization
-// TODO: Fix type organization and remove these duplicates
-export interface CreateLeagueRequest {
-  name: string
-  description?: string
-  playerIds: string[]
-  startDate: string
-  endDate?: string
-  gamesPerPlayer: number
-}
-
-export interface LeagueGenerationResult {
-  league: LeagueWithProgress
-  scheduledPods: any[] // TODO: Define proper ScheduledPod type
-  stats: {
-    totalPlayers: number
-    totalPods: number
-    gamesPerPlayer: number
-  }
-}
+import { resolvePlayerIdentifiers } from './PlayerMatchingService'
 
 /**
  * Generate a complete league with scheduled pods
  */
-export async function generateLeague(request: CreateLeagueRequest): Promise<LeagueGenerationResult> {
+export async function createLeague(leagueData: LeagueInput, userId?: string): Promise<CreateLeagueResponse> {
   try {
-    console.log('🎯 Generating league:', { name: request.name, playerCount: request.playerIds.length })
+    console.log('🎯 Generating league:', { name: leagueData.name, playerCount: leagueData.participants.length, userId })
 
     // Check admin permissions
-    await validateCurrentUserIsAdmin()
+    await validateCurrentUserIsAdmin(userId)
 
-    // Validate league input
-    const leagueInput: CreateLeagueInput = {
-      name: request.name,
-      description: request.description || null,
-      player_ids: request.playerIds,
-      start_date: request.startDate,
-      end_date: request.endDate || null,
-      games_per_player: request.gamesPerPlayer
-    }
-
-    const validation = validateLeagueInput(leagueInput)
+    // 1. VALIDATE REQUEST - Copy from pod pattern
+    const validation = validateLeagueRequest(leagueData)
     if (!validation.isValid) {
       throw new ValidationError('Invalid league data', validation.errors)
     }
 
-    // Generate pod pairings (TODO: needs PodGenerationService)
-    const podPlayerGroups = generatePodPairings(request.playerIds, request.gamesPerPlayer)
-    console.log(`🎲 Generated ${podPlayerGroups.length} pod pairings`)
+    // 2. RESOLVE PLAYER IDENTIFIERS - Copy from pod pattern
+    console.log('🔄 Resolving player identifiers through PlayerMatchingService')
+    const resolvedParticipants = await resolvePlayerIdentifiers(leagueData.participants)
 
-    // Create the league record
-    const league = await db.leagues.create(leagueInput, podPlayerGroups)
-    console.log(`✅ Created league: ${league.id}`)
-
-    // Get the created scheduled pods
-    const scheduledPods = await db.leagues.getScheduledPods(league.id)
-    console.log(`💾 Created ${scheduledPods.length} scheduled pods`)
-
-    // Activate the league
-    await db.leagues.updateStatus(league.id, 'active')
-    console.log(`🚀 League "${league.name}" is now active!`)
-
-    return {
-      league,
-      scheduledPods,
-      stats: {
-        totalPlayers: league.player_ids.length,
-        totalPods: podPlayerGroups.length,
-        gamesPerPlayer: request.gamesPerPlayer
-      }
+    // 3. CREATE RESOLVED LEAGUE DATA - Copy from pod pattern
+    const resolvedLeagueData: LeagueResolved = {
+      ...leagueData,
+      participants: resolvedParticipants
     }
 
+    // 4. VALIDATE RESOLVED DATA - Copy from pod pattern
+    const resolvedValidation = validateLeagueResolved(resolvedLeagueData)
+    if (!resolvedValidation.isValid) {
+      throw new ValidationError('Invalid resolved league data', resolvedValidation.errors)
+    }
+
+    // 6. Generate pod pairings (TODO: needs PodGenerationService)
+    const podPlayerGroups = generatePodPairings(resolvedParticipants, resolvedLeagueData.games_per_player)
+    console.log(`🎲 Generated ${podPlayerGroups.length} pod pairings`)
+    let league: League | null = null
+    try{
+      // 7 Create the league record
+      league = await db.leagues.create(resolvedLeagueData, podPlayerGroups)
+      console.log(`✅ Created league: ${league!.id}`)
+
+      // Get the created scheduled pods
+      const scheduledPods = await db.leagues.getScheduledPods(league!.id)
+      console.log(`💾 Created ${scheduledPods.length} scheduled pods`)
+
+      // Activate the league
+      await db.leagues.updateStatus(league!.id, 'active')
+      console.log(`🚀 League "${league!.name}" is now active!`)
+
+      return {
+        success: true,
+        data: league!,
+        timestamp: new Date().toISOString()
+      }
+    } catch(dbError){
+      if(league?.id){
+        try{
+          await db.leagues.delete(league.id)
+        }catch (rollbackError){
+          console.error(' Rollback Failed:', rollbackError)
+        }
+      }
+      throw dbError
+    }
   } catch (error) {
     console.error('❌ League generation error:', error)
 
     if (error instanceof APIError) {
-      throw error
+      return {
+        success: false,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      }
     }
 
-    throw new APIError(`Failed to generate league: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    return {
+      success: false,
+      error: 'Failed to create league',
+      timestamp: new Date().toISOString()
+    }
   }
 }
 
-/**
- * Validate league creation request (legacy helper)
- * 
- * @deprecated Use validateLeagueInput from utils/validation/league instead
- */
-export function validateLeagueCreation(playerCount: number, gamesPerPlayer: number): { isValid: boolean; error?: string } {
-  // For backward compatibility, create a minimal request object
-  const fakeRequest = {
-    name: 'temp',
-    player_ids: new Array(playerCount).fill('temp'),
-    games_per_player: gamesPerPlayer,
-    start_date: '2024-01-01'
+export async function listLeagues(filters: {
+  status?: string,
+  limit?: number
+  offset?: number
+} = {}): Promise<LeagueDisplay[]> {
+  try {
+    console.log('📋 Listing pods with filters:', filters)
+
+    const leagues = await db.leagues.list({
+      status: filters.status,
+      limit: filters.limit || 50,
+      offset: filters.offset || 0
+    })
+  
+
+    return leagues
+
+  } catch (error) {
+    console.error('❌ List pods error:', error)
+    throw new APIError(`Failed to list pods: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
-  
-  const validation = validateLeagueInput(fakeRequest)
-  
-  if (!validation.isValid) {
-    return { 
-      isValid: false, 
-      error: validation.errors[0]?.message || 'League validation failed'
-    }
-  }
-  
-  return { isValid: true }
 }
 
 /**

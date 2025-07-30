@@ -2,9 +2,9 @@
 // Player Service - Pure CRUD Operations (Cleaned)
 // ============================================================================
 
-import { db, Player, CreatePlayerInput } from '@dadgic/database'
+import { db, Player, CreatePlayerInput, CreatePlayerResponse, CreatePlayerRequest, PlayerInput } from '@dadgic/database'
 import { APIError, ValidationError } from '../errors/APIError'
-import { validatePlayerInput, validatePlayerExists } from '../utils/validation/player'
+import { validatePlayerRequest, validatePlayerExists } from '../utils/validation/player'
 
 // ============================================================================
 // PLAYER SERVICE - CRUD ONLY
@@ -13,12 +13,7 @@ import { validatePlayerInput, validatePlayerExists } from '../utils/validation/p
 /**
  * Create a new player
  */
-export async function createPlayer(request: CreatePlayerInput, userId?: string): Promise<{ 
-  success: boolean; 
-  data?: Player; 
-  error?: string; 
-  timestamp: string 
-}> {
+export async function createPlayer(request: PlayerInput, userId?: string): Promise<CreatePlayerResponse> {
   try {
     console.log('👥 Creating player:', {
       name: request.name,
@@ -27,7 +22,7 @@ export async function createPlayer(request: CreatePlayerInput, userId?: string):
     })
 
     // Validate request
-    const validation = validatePlayerInput(request)
+    const validation = validatePlayerRequest(request)
     if (!validation.isValid) {
       throw new ValidationError('Invalid player data', validation.errors)
     }
@@ -52,11 +47,11 @@ export async function createPlayer(request: CreatePlayerInput, userId?: string):
     }
 
     // Create player
-    const playerData: CreatePlayerInput = {
+    const playerData: PlayerInput = {
       name: request.name.trim(),
       discord_username: request.discord_username?.trim() || null,
       discord_id: request.discord_id?.trim() || null,
-      role: 'player' as const
+      role: request.role || 'player' 
     }
 
     const createdPlayer = await db.players.create(playerData)
@@ -137,7 +132,7 @@ export async function listPlayers(filters: {
 /**
  * Update an existing player
  */
-export async function updatePlayer(playerId: string, updates: Partial<CreatePlayerInput>, userId?: string): Promise<Player> {
+export async function updatePlayer(playerId: string, updates: Partial<PlayerInput>, userId?: string): Promise<Player> {
   try {
     console.log('✏️ Updating player:', { playerId, userId })
 
@@ -146,7 +141,7 @@ export async function updatePlayer(playerId: string, updates: Partial<CreatePlay
 
     // Validate updates
     if (Object.keys(updates).length > 0) {
-      const validation = validatePlayerInput({ name: 'temp', ...updates })
+      const validation = validatePlayerRequest({ name: 'temp', ...updates })
       if (!validation.isValid) {
         throw new ValidationError('Invalid update data', validation.errors)
       }
@@ -225,7 +220,7 @@ export async function deletePlayer(playerId: string, userId?: string): Promise<v
 // ============================================================================
 
 export class PlayerService {
-  async createPlayer(request: CreatePlayerInput, userId?: string) {
+  async createPlayer(request: CreatePlayerRequest, userId?: string) {
     return createPlayer(request, userId)
   }
 

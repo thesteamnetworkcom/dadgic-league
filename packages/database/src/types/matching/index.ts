@@ -10,6 +10,10 @@ export interface PlayerIdentifier {
   discord_username?: string | null;
   name?: string | null;
   displayName?: string | null;
+  unknown_identifier? : string | null;
+}
+export interface ResolvedPlayerIdentifier {
+  
 }
 
 export interface PlayerMatchOption {

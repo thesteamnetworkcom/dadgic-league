@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getPlayerService } from '@dadgic/shared/services'
-import { handleAPIError } from '@dadgic/shared/utils/errors/APIError'
+import { getPlayerService, handleAPIError } from '@dadgic/shared'
+import { validatePlayerRequest } from '@dadgic/shared'
+import { createPlayer } from '@dadgic/shared'
+import { ValidationError } from '@dadgic/shared'
+import type { PlayerInput } from '@dadgic/shared'
 
 export async function GET(request: NextRequest) {
   try {
@@ -38,17 +41,38 @@ export async function POST(request: NextRequest) {
     
     console.log('👥 Players API - Create request:', {
       name: body.name,
-      discord_username: body.discord_username
+      discord_username: body.discord_username,
+      discord_id: body.discord_id
     })
 
-    const playerService = getPlayerService()
-    const result = await playerService.createPlayer(body)
-
-    if (!result.success) {
-      return NextResponse.json(result, { status: 400 })
+    // 1. VALIDATE REQUEST - Check that workable data was passed
+    const validation = validatePlayerRequest(body)
+    
+    if (!validation.isValid) {
+      throw new ValidationError('Invalid player request data', validation.errors)
     }
 
-    return NextResponse.json(result, { status: 201 })
+    // 2. EXTRACT CONTEXT (if needed)
+    const userId = body.context?.user_id
+
+    // 3. CONVERT TO SERVICE INPUT FORMAT
+    const playerData: PlayerInput = {
+      name: body.name,
+      discord_username: body.discord_username || null,
+      discord_id: body.discord_id || null,
+      role: 'player' // Always set to player for API requests
+    }
+
+    // 4. CALL SERVICE
+    const createdPlayer = await createPlayer(playerData, userId)
+
+    // 5. RETURN CONSISTENT RESPONSE FORMAT
+    return NextResponse.json({
+      success: true,
+      action: 'created',
+      data: { player: createdPlayer },
+      timestamp: new Date().toISOString()
+    }, { status: 201 })
 
   } catch (error) {
     console.error('❌ Players API - Create error:', error)

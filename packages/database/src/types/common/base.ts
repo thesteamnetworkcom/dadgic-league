@@ -16,6 +16,15 @@ export interface ParticipantBase {
   result: 'win' | 'lose' | 'draw';
 }
 
+export interface LeagueBase {
+  name: string;
+  description?: string | null;
+  start_date: string;
+  end_date?: string | null;
+  games_per_player: number; // Note: keeping games_per_player for DB compatibility
+  status?: 'draft' | 'active' | 'completed';
+}
+
 export interface RequestBase {
   context?: {
     user_id?: string;

@@ -5,7 +5,7 @@ import csv from 'csv-parser';
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import dotenv from 'dotenv';
-import { db, CreatePodInput } from '@dadgic/database';
+import { CreatePodInput, db, PodResolved } from '@dadgic/database';
 
 // Load environment variables from the project root
 const envPath = path.join(process.cwd(), '../../.env');
@@ -265,7 +265,7 @@ class CSVImporter {
     console.log(chalk.green(`✓ Mapped "${csvName}" to "${selectedPlayer.name}"`));
   }
 
-  private convertToPods(csvData: CSVRow[]): CreatePodInput[] {
+  private convertToPods(csvData: CSVRow[]): PodResolved[] {
     console.log(chalk.yellow('Converting CSV data to pod format...'));
     
     // Debug: Show what columns we actually have
@@ -274,7 +274,7 @@ class CSVImporter {
       console.log(chalk.blue('First row sample:'), csvData[0]);
     }
     
-    const pods: CreatePodInput[] = [];
+    const pods: PodResolved[] = [];
 
     csvData.forEach((row, index) => {
       try {
@@ -302,9 +302,11 @@ class CSVImporter {
         if (participants.length > 0) {
           pods.push({
             date: this.parseDate(row.Date),
-            game_length_minutes: parseInt(row.Minutes) || undefined,
-            turns: parseInt(row.Turns) || undefined,
-            winning_commander: row['Winning Commander']?.trim() || undefined,
+            game_length_minutes: parseInt(row.Minutes) || null,
+            turns: parseInt(row.Turns) || null,
+            league_id: null,
+            notes: null,
+            //winning_commander: row['Winning Commander']?.trim() || null,
             participants
           });
         }
@@ -361,7 +363,7 @@ class CSVImporter {
     return today;
   }
 
-  private async previewImport(pods: CreatePodInput[]) {
+  private async previewImport(pods: PodResolved[]) {
     console.log(chalk.blue.bold('Import Preview:'));
     console.log(chalk.gray(`  - ${pods.length} pods to import`));
     console.log(chalk.gray(`  - Date range: ${pods[0]?.date} to ${pods[pods.length - 1]?.date}`));
@@ -382,7 +384,7 @@ class CSVImporter {
     }
   }
 
-  private async importPods(pods: CreatePodInput[]) {
+  private async importPods(pods: PodResolved[]) {
     console.log(chalk.yellow('Importing pods...'));
     
     let successCount = 0;

@@ -2,15 +2,17 @@
 // Pod Generation Service - Scheduling & Pairing Algorithm
 // ============================================================================
 
+import { Player } from "@dadgic/database"
+
 /**
  * Generates balanced pod pairings for a league
  * Algorithm tries to minimize repeated player pairings
  */
 export function generatePodPairings(
-  playerIds: string[], 
+  players: Player[], 
   gamesPerPlayer: number
-): string[][] {
-  const playerCount = playerIds.length
+): Player[][] {
+  const playerCount = players.length
   const totalPlayerSlots = playerCount * gamesPerPlayer
   const totalPods = Math.floor(totalPlayerSlots / 4)
 
@@ -28,21 +30,21 @@ export function generatePodPairings(
   
   // Track how many games each player has been assigned
   const playerGameCounts = new Map<string, number>()
-  playerIds.forEach(id => playerGameCounts.set(id, 0))
+  players.forEach(player => playerGameCounts.set(player.id, 0))
 
   // Initialize pair tracking
   for (let i = 0; i < playerCount; i++) {
     for (let j = i + 1; j < playerCount; j++) {
-      const pairKey = getPairKey(playerIds[i], playerIds[j])
+      const pairKey = getPairKey(players[i].id, players[j].id)
       pairCounts.set(pairKey, 0)
     }
   }
 
-  const pods: string[][] = []
+  const pods: Player[][] = []
 
   // Generate pods one by one
   for (let podIndex = 0; podIndex < totalPods; podIndex++) {
-    const pod = generateSinglePod(playerIds, playerGameCounts, pairCounts, gamesPerPlayer)
+    const pod = generateSinglePod(players, playerGameCounts, pairCounts, gamesPerPlayer)
     if (!pod) {
       throw new Error(`Failed to generate pod ${podIndex + 1}. Try different player count or games per player.`)
     }
@@ -52,17 +54,17 @@ export function generatePodPairings(
     // Update counts
     updateCounts(pod, playerGameCounts, pairCounts)
     
-    console.log(`Generated pod ${podIndex + 1}:`, pod.map(id => `Player${playerIds.indexOf(id) + 1}`))
+    console.log(`Generated pod ${podIndex + 1}:`, pod.map(id => `Player${id}`))
   }
 
   // Verify the result
-  const verification = verifyGeneration(playerIds, pods, gamesPerPlayer)
+  const verification = verifyGeneration(players, pods, gamesPerPlayer)
   if (!verification.isValid) {
     throw new Error(`Generation failed verification: ${verification.errors.join(', ')}`)
   }
 
   console.log('✅ Pod generation successful!')
-  logFinalStats(playerIds, pods, pairCounts)
+  logFinalStats(players, pods, pairCounts)
 
   return pods
 }
@@ -71,14 +73,14 @@ export function generatePodPairings(
  * Generate a single pod trying to minimize pair repetitions
  */
 function generateSinglePod(
-  allPlayers: string[],
+  allPlayers: Player[],
   playerGameCounts: Map<string, number>,
   pairCounts: Map<string, number>,
   maxGamesPerPlayer: number
-): string[] | null {
+): Player[] | null {
   // Get players who still need games
   const availablePlayers = allPlayers.filter(
-    playerId => playerGameCounts.get(playerId)! < maxGamesPerPlayer
+    player => playerGameCounts.get(player.id)! < maxGamesPerPlayer
   )
 
   if (availablePlayers.length < 4) {
@@ -87,7 +89,7 @@ function generateSinglePod(
 
   // Try different combinations to find the best pod
   const maxAttempts = 1000
-  let bestPod: string[] | null = null
+  let bestPod: Player[] | null = null
   let bestScore = Infinity
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -116,12 +118,12 @@ function generateSinglePod(
  * Score a pod based on how many repeated pairings it creates
  * Lower score is better (0 = no repeated pairs)
  */
-function scorePod(pod: string[], pairCounts: Map<string, number>): number {
+function scorePod(pod: Player[], pairCounts: Map<string, number>): number {
   let score = 0
   
   for (let i = 0; i < pod.length; i++) {
     for (let j = i + 1; j < pod.length; j++) {
-      const pairKey = getPairKey(pod[i], pod[j])
+      const pairKey = getPairKey(pod[i].id, pod[j].id)
       const currentCount = pairCounts.get(pairKey) || 0
       
       // Heavily penalize repeated pairings
@@ -136,20 +138,20 @@ function scorePod(pod: string[], pairCounts: Map<string, number>): number {
  * Update tracking after creating a pod
  */
 function updateCounts(
-  pod: string[], 
+  pod: Player[], 
   playerGameCounts: Map<string, number>, 
   pairCounts: Map<string, number>
 ): void {
   // Update player game counts
-  pod.forEach(playerId => {
-    const current = playerGameCounts.get(playerId) || 0
-    playerGameCounts.set(playerId, current + 1)
+  pod.forEach(player => {
+    const current = playerGameCounts.get(player.id) || 0
+    playerGameCounts.set(player.id, current + 1)
   })
 
   // Update pair counts
   for (let i = 0; i < pod.length; i++) {
     for (let j = i + 1; j < pod.length; j++) {
-      const pairKey = getPairKey(pod[i], pod[j])
+      const pairKey = getPairKey(pod[i].id, pod[j].id)
       const current = pairCounts.get(pairKey) || 0
       pairCounts.set(pairKey, current + 1)
     }
@@ -167,27 +169,27 @@ function getPairKey(playerId1: string, playerId2: string): string {
  * Verify the generated pods meet requirements
  */
 function verifyGeneration(
-  playerIds: string[], 
-  pods: string[][], 
+  players: Player[], 
+  pods: Player[][], 
   expectedGamesPerPlayer: number
 ): { isValid: boolean; errors: string[] } {
   const errors: string[] = []
 
   // Check each player has correct number of games
   const playerGameCounts = new Map<string, number>()
-  playerIds.forEach(id => playerGameCounts.set(id, 0))
+  players.forEach(player => playerGameCounts.set(player.id, 0))
 
   pods.forEach(pod => {
-    pod.forEach(playerId => {
-      const current = playerGameCounts.get(playerId) || 0
-      playerGameCounts.set(playerId, current + 1)
+    pod.forEach(player => {
+      const current = playerGameCounts.get(player.id) || 0
+      playerGameCounts.set(player.id, current + 1)
     })
   })
 
-  playerIds.forEach(playerId => {
-    const gameCount = playerGameCounts.get(playerId) || 0
+  players.forEach(player => {
+    const gameCount = playerGameCounts.get(player.id) || 0
     if (gameCount !== expectedGamesPerPlayer) {
-      errors.push(`Player ${playerId} has ${gameCount} games, expected ${expectedGamesPerPlayer}`)
+      errors.push(`Player ${player.id} has ${gameCount} games, expected ${expectedGamesPerPlayer}`)
     }
   })
 
@@ -208,8 +210,8 @@ function verifyGeneration(
  * Log final statistics about the generation
  */
 function logFinalStats(
-  playerIds: string[], 
-  pods: string[][], 
+  players: Player[], 
+  pods: Player[][], 
   pairCounts: Map<string, number>
 ): void {
   // Count pair frequency distribution

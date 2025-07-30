@@ -8,7 +8,7 @@ import {
   getGameService, 
   type ParsedGameData,
   type CreateGameRequest 
-} from '@dadgic/shared/services'
+} from '@dadgic/shared'
 
 export class GameReportingService {
   async parseGameDescription(text: string, userId?: string): Promise<{

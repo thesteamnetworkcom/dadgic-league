@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getPlayerService } from '@dadgic/shared/services'
-import { handleAPIError } from '@dadgic/shared/utils/errors/APIError'
+import { getPlayerService } from '@dadgic/shared'
+import { handleAPIError } from '@dadgic/shared'
 
 export async function GET(
   request: NextRequest,

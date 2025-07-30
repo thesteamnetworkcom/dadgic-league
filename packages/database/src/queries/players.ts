@@ -1,6 +1,6 @@
 import { BaseQueries } from './base';
 import type { ClientType } from '../client-factory';
-import type { Player, CreatePlayerInput } from '../types';
+import type { Player, PlayerInput } from '../types';
 
 export class PlayerQueries extends BaseQueries {
   static async getAll(clientType: ClientType = 'user'): Promise<Player[]> {
@@ -22,7 +22,7 @@ export class PlayerQueries extends BaseQueries {
     }
   }
 
-  static async create(input: CreatePlayerInput, clientType: ClientType = 'user'): Promise<Player> {
+  static async create(input: PlayerInput, clientType: ClientType = 'user'): Promise<Player> {
     this.validateRequired(input.name, 'player name');
 
     const supabase = this.getClient(clientType);
@@ -176,7 +176,7 @@ export class PlayerQueries extends BaseQueries {
 
   static async update(
     playerId: string, 
-    updates: Partial<CreatePlayerInput>, 
+    updates: Partial<PlayerInput>, 
     clientType: ClientType = 'user'
   ): Promise<Player> {
     this.validateRequired(playerId, 'player id');

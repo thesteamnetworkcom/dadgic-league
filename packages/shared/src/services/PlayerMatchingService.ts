@@ -106,6 +106,30 @@ export async function findPlayerWithContext(
   }
 }
 
+export async function resolvePlayerIdentifiers(
+  identifiers: PlayerIdentifier[]
+): Promise<Player[]> {
+  try {
+    console.log('🔄 Resolving participants:', { count: identifiers.length })
+
+    const resolved: Player[] = []
+
+    for (const identifier of identifiers) {
+      const player = await findPlayerSingle(identifier)
+
+      resolved.push(
+        player
+      )
+    }
+
+    console.log('✅ Participants resolved successfully:', { count: resolved.length })
+    return resolved
+
+  } catch (error) {
+    console.error('❌ Participant resolution error:', error)
+    throw new APIError(`Failed to resolve participants: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
+}
 /**
  * ✅ NEW: Resolve participants from input to resolved format
  * This is what the API layer will call before PodService
@@ -116,21 +140,19 @@ export async function resolveParticipants(
   try {
     console.log('🔄 Resolving participants:', { count: participants.length })
 
-    const resolved: ParticipantResolved[] = []
+    // Extract identifiers and resolve them
+    // Convert string identifiers to PlayerIdentifier objects
+    const identifiers: PlayerIdentifier[] = participants.map(p => ({
+      unknown_identifier: p.player_identifier // "I don't know what this is"
+    }))
+    const players = await resolvePlayerIdentifiers(identifiers) // ADD AWAIT HERE
 
-    for (const participant of participants) {
-      // TODO: Use full matching algorithm instead of simple name mapping
-      // Currently only using name field, should use fuzzy matching, context, etc.
-      const player = await findPlayerSingle({ 
-        name: participant.player_identifier // Simple mapping for now
-      })
-
-      resolved.push({
-        player_id: player.id,
-        commander_deck: participant.commander_deck,
-        result: participant.result
-      })
-    }
+    // Map back to participant format
+    const resolved = participants.map((participant, index) => ({
+      player_id: players[index].id,
+      commander_deck: participant.commander_deck,
+      result: participant.result
+    }))
 
     console.log('✅ Participants resolved successfully:', { count: resolved.length })
     return resolved
@@ -150,8 +172,9 @@ export async function resolveParticipants(
  */
 async function tryExactMatches(identifier: PlayerIdentifier): Promise<PlayerMatchResult> {
   // 1. Exact ID match (most reliable)
-  if (identifier.id) {
-    const player = await db.players.findById(identifier.id)
+  if (identifier.id || identifier.unknown_identifier) {
+    const param =(identifier.id || identifier.unknown_identifier)!
+    const player = await db.players.findById(param)
     if (player) {
       return {
         player,
@@ -163,8 +186,8 @@ async function tryExactMatches(identifier: PlayerIdentifier): Promise<PlayerMatc
   }
 
   // 2. Exact Discord ID match
-  if (identifier.discord_id) {
-    const player = await db.players.findByDiscordId(identifier.discord_id)
+  if (identifier.discord_id || identifier.unknown_identifier) {
+    const player = await db.players.findByDiscordId((identifier.discord_id || identifier.unknown_identifier)!)
     if (player) {
       return {
         player,
@@ -176,8 +199,8 @@ async function tryExactMatches(identifier: PlayerIdentifier): Promise<PlayerMatc
   }
 
   // 3. Exact Discord username match
-  if (identifier.discord_username) {
-    const player = await db.players.findByDiscordUsername(identifier.discord_username)
+  if (identifier.discord_username || identifier.unknown_identifier) {
+    const player = await db.players.findByDiscordUsername((identifier.discord_username || identifier.unknown_identifier)!)
     if (player) {
       return {
         player,
@@ -189,8 +212,8 @@ async function tryExactMatches(identifier: PlayerIdentifier): Promise<PlayerMatc
   }
 
   // 4. Exact name match
-  if (identifier.name || identifier.displayName) {
-    const searchName = (identifier.name || identifier.displayName)!.toLowerCase().trim()
+  if (identifier.name || identifier.displayName || identifier.unknown_identifier) {
+    const searchName = (identifier.name || identifier.displayName || identifier.unknown_identifier)!.toLowerCase().trim()
     const allPlayers = await db.players.getAll()
     
     const exactNameMatch = allPlayers.find(p => 
@@ -219,7 +242,7 @@ async function tryExactMatches(identifier: PlayerIdentifier): Promise<PlayerMatc
  * Try fuzzy matching with confidence scoring
  */
 async function tryFuzzyMatching(identifier: PlayerIdentifier): Promise<PlayerMatchResult> {
-  const searchName = (identifier.name || identifier.displayName || identifier.discord_username)
+  const searchName = (identifier.name || identifier.displayName || identifier.discord_username || identifier.unknown_identifier)
   if (!searchName) {
     return {
       player: null,
@@ -294,7 +317,7 @@ async function tryContextMatching(
   identifier: PlayerIdentifier, 
   options: ContextOptions
 ): Promise<PlayerMatchResult> {
-  const searchName = (identifier.name || identifier.displayName)
+  const searchName = (identifier.name || identifier.displayName || identifier.unknown_identifier)
   if (!searchName) {
     return {
       player: null,
@@ -374,7 +397,7 @@ async function tryContextMatching(
 // ========================================================================
 
 async function generateSuggestions(identifier: PlayerIdentifier): Promise<PlayerMatchOption[]> {
-  const searchTerm = identifier.name || identifier.displayName || identifier.discord_username
+  const searchTerm = identifier.name || identifier.displayName || identifier.discord_username || identifier.unknown_identifier
   if (!searchTerm || searchTerm.length < 2) {
     return []
   }

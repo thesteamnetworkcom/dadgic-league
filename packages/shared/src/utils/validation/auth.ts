@@ -9,9 +9,9 @@ import { ValidationError } from '../../errors/APIError'
  * Check if the current user is an admin
  * Uses existing database method until proper auth is implemented
  */
-export async function validateCurrentUserIsAdmin(): Promise<void> {
+export async function validateCurrentUserIsAdmin(userId?: string): Promise<void> {
   // For now, use the existing database method that works
-  const isAdmin = await db.base.isCurrentUserAdmin()
+  const isAdmin = await db.base.isCurrentUserAdmin(userId)
   
   if (!isAdmin) {
     throw new ValidationError('Admin access required', [

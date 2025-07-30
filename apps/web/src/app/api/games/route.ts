@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getGameService } from '@dadgic/shared/services'
-import { handleAPIError } from '@dadgic/shared/utils/errors/APIError'
+import { getGameService } from '@dadgic/shared'
+import { handleAPIError } from '@dadgic/shared'
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     console.log('📋 Games API - List request:', filters)
 
     const gameService = getGameService()
-    const games = await gameService.listGames(filters)
+    const games = await gameService.listPods(filters)
 
     return NextResponse.json({
       success: true,
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     })
 
     const gameService = getGameService()
-    const result = await gameService.createGame(body)
+    const result = await gameService.createPod(body)
 
     if (!result.success) {
       return NextResponse.json(result, { status: 400 })

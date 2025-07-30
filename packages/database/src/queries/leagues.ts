@@ -1,8 +1,10 @@
 // packages/database/src/queries/leagues.ts
 import { supabase } from '../client';
-import { League, LeagueWithProgress, CreateLeagueInput, ScheduledPod, PodWithParticipants } from '../types';
+import { ClientType } from '../client-factory';
+import { League, LeagueWithProgress, CreateLeagueInput, ScheduledPod, PodWithParticipants, ParticipantInput, PlayerIdentifier, LeagueResolved, Player } from '../types';
+import { BaseQueries } from './base';
 
-export class LeagueQueries {
+export class LeagueQueries extends BaseQueries{
   // Add to LeagueQueries class in packages/database/src/queries/leagues.ts
 static async findMatchingScheduledPod(playerIds: string[]): Promise<ScheduledPod | null> {
   // Sort player IDs for consistent comparison
@@ -48,7 +50,36 @@ static async getLeagueInfo(scheduledPodId: string): Promise<{leagueName: string,
   };
 }
   
+static async list(
+  filters: {
+    status?: string
+    limit?: number
+    offset?: number
+  } = {},
+  clientType: ClientType = 'user'
+) : Promise<League[]> {
+  const supabase = this.getClient(clientType);
+  let query = supabase
+    .from('leagues')
+    .select(`*`);
+  if(filters.status){
+    query = query.eq('status', filters.status)
+  }
+  if (filters.limit) {
+    query = query.limit(filters.limit);
+  }
 
+  if (filters.offset) {
+    query = query.range(filters.offset, filters.offset + (filters.limit || 50) - 1);
+  }
+
+  const { data, error } = await query;
+  
+  if (error) throw error;
+
+  let results = data as League[];
+  return results;
+}
 
   static async getAll(): Promise<LeagueWithProgress[]> {
     const { data, error } = await supabase
@@ -91,15 +122,15 @@ static async getLeagueInfo(scheduledPodId: string): Promise<{leagueName: string,
   }
 
   // UPDATED CREATE METHOD - now takes podPlayerGroups instead of generating all combinations
-  static async create(input: CreateLeagueInput, podPlayerGroups?: string[][]): Promise<League> {
-
+  static async create(input: LeagueResolved, podPlayerGroups?: Player[][], clientType: ClientType = 'user'): Promise<League> {
+    const supabase = this.getClient(clientType);
     // Create the league
     const { data: league, error: leagueError } = await supabase
       .from('leagues')
       .insert({
         name: input.name,
         description: input.description || null,
-        player_ids: input.player_ids,
+        player_ids: input.participants,
         start_date: input.start_date,
         end_date: input.end_date || null,
         games_per_player: input.games_per_player, // ADD this field
@@ -111,12 +142,12 @@ static async getLeagueInfo(scheduledPodId: string): Promise<{leagueName: string,
     if (leagueError) throw leagueError;
     
     // Insert scheduled pods using provided groups OR generate all combinations (backwards compatibility)
-    let combinations: string[][];
+    let combinations: Player[][];
     if (podPlayerGroups) {
       combinations = podPlayerGroups;
     } else {
       // Fallback to old behavior for backwards compatibility
-      combinations = this.generateCombinations(input.player_ids, 4);
+      combinations = this.generateCombinations(input.participants, 4);
     }
     
     if (combinations.length > 0) {
@@ -125,7 +156,7 @@ static async getLeagueInfo(scheduledPodId: string): Promise<{leagueName: string,
         .insert(
           combinations.map(combo => ({
             league_id: league.id,
-            player_ids: combo
+            player_ids: combo.map(player => player.id)
           }))
         );
       
@@ -146,10 +177,10 @@ static async getLeagueInfo(scheduledPodId: string): Promise<{leagueName: string,
   }
 
   // Keep your existing private method
-  private static generateCombinations(players: string[], size: number): string[][] {
-    const combinations: string[][] = [];
+  private static generateCombinations(players: Player[], size: number): Player[][] {
+    const combinations: Player[][] = [];
     
-    function combine(start: number, combo: string[]) {
+    function combine(start: number, combo: Player[]) {
       if (combo.length === size) {
         combinations.push([...combo]);
         return;

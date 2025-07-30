@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAIParsingService } from '@dadgic/shared/services/AIParsingService'
-import { handleAPIError } from '@dadgic/shared/utils/errors/APIError'
-import { validateAIParseRequest } from '@dadgic/shared/utils/validation'
+import { getAIParsingService } from '@dadgic/shared'
+import { handleAPIError } from '@dadgic/shared'
+import { validateAIParseRequest } from '@dadgic/shared'
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     const aiService = getAIParsingService()
     
     console.log('🤖 Calling real AI parsing service...')
-    const result = await aiService.parseGameText({
+    const result = await aiService.parsePodText({
       text: body.text,
       context: {
         source: 'web',

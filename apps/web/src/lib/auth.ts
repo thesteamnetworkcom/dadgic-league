@@ -60,7 +60,7 @@ export async function getCurrentUser(): Promise<User | null> {
     if (!user) return null
 
     // Get additional user data from our players table using your database
-    const playerData = await db.players.getByDiscordId(user.user_metadata?.provider_id)
+    const playerData = await db.players.findByDiscordId(user.user_metadata?.provider_id)
 
     return {
       id: user.id,
@@ -95,7 +95,7 @@ export async function syncUserWithPlayer(user: User) {
     // Try to find existing player by discord_id first
     let existingPlayer = null
     if (user.discord_id) {
-      existingPlayer = await db.players.getByDiscordId(user.discord_id)
+      existingPlayer = await db.players.findByDiscordId(user.discord_id)
       console.log('syncUserWithPlayer: Found by discord_id:', existingPlayer)
     }
     

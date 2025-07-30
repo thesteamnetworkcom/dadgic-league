@@ -2,17 +2,25 @@
 // LEAGUE TYPE FAMILY
 // ============================================================================
 
+import { LeagueBase } from "../common/base";
+import { Player } from "../core";
+import { PlayerIdentifier } from "../matching";
+import { ParticipantInput } from "../participants";
+
 // Input variant - for creating leagues
-export interface LeagueInput {
-  name: string;
-  description?: string | null;
-  player_ids: string[];
-  start_date: string;
-  end_date?: string | null;
-  games_per_player: number; // Note: keeping games_per_player for DB compatibility
-  status?: 'draft' | 'active' | 'completed';
+export interface LeagueInput extends LeagueBase{
+  participants: PlayerIdentifier[];
+}
+export interface LeagueResolved extends LeagueBase{
+  participants: Player[];
 }
 
+export interface LeagueDisplay extends LeagueBase{
+  id: string;
+  participants: Player[];
+  created_at: string;
+  updated_at: string
+}
 // Update variant - for updating leagues
 export interface LeagueUpdate {
   name?: string;
