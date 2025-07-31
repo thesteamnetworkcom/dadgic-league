@@ -1,71 +1,71 @@
 import { ChatInputCommandInteraction, ButtonInteraction, ModalSubmitInteraction } from 'discord.js'
 
 interface ConversationState {
-  originalInput: string
-  parsedData?: any
-  matchedPlayers?: any[]
-  missingData?: any
-  lastActivity: number
-  attempts: number
+	originalInput: string
+	parsedData?: any
+	matchedPlayers?: any[]
+	missingData?: any
+	lastActivity: number
+	attempts: number
 }
 
 export class ConversationRecoveryService {
-  private static conversations = new Map<string, ConversationState>()
-  private static readonly CONVERSATION_TIMEOUT = 1800000 // 30 minutes
-  private static readonly MAX_ATTEMPTS = 5
+	private static conversations = new Map<string, ConversationState>()
+	private static readonly CONVERSATION_TIMEOUT = 1800000 // 30 minutes
+	private static readonly MAX_ATTEMPTS = 5
 
-  static saveConversationState(userId: string, state: Partial<ConversationState>): void {
-    const existing = this.conversations.get(userId) || {
-      originalInput: '',
-      lastActivity: Date.now(),
-      attempts: 0
-    }
+	static saveConversationState(userId: string, state: Partial<ConversationState>): void {
+		const existing = this.conversations.get(userId) || {
+			originalInput: '',
+			lastActivity: Date.now(),
+			attempts: 0
+		}
 
-    this.conversations.set(userId, {
-      ...existing,
-      ...state,
-      lastActivity: Date.now(),
-      attempts: existing.attempts + 1
-    })
-  }
+		this.conversations.set(userId, {
+			...existing,
+			...state,
+			lastActivity: Date.now(),
+			attempts: existing.attempts + 1
+		})
+	}
 
-  static getConversationState(userId: string): ConversationState | null {
-    const state = this.conversations.get(userId)
-    
-    if (!state) return null
+	static getConversationState(userId: string): ConversationState | null {
+		const state = this.conversations.get(userId)
 
-    // Check if conversation has timed out
-    if (Date.now() - state.lastActivity > this.CONVERSATION_TIMEOUT) {
-      this.clearConversationState(userId)
-      return null
-    }
+		if (!state) return null
 
-    return state
-  }
+		// Check if conversation has timed out
+		if (Date.now() - state.lastActivity > this.CONVERSATION_TIMEOUT) {
+			this.clearConversationState(userId)
+			return null
+		}
 
-  static clearConversationState(userId: string): void {
-    this.conversations.delete(userId)
-    console.log(`🧹 Cleared conversation state for user ${userId}`)
-  }
+		return state
+	}
 
-  static async handleBrokenConversation(
-    interaction: ChatInputCommandInteraction | ButtonInteraction | ModalSubmitInteraction,
-    error: Error
-  ): Promise<void> {
-    const userId = interaction.user.id
-    const state = this.getConversationState(userId)
+	static clearConversationState(userId: string): void {
+		this.conversations.delete(userId)
+		console.log(`🧹 Cleared conversation state for user ${userId}`)
+	}
 
-    console.log(`🔧 Handling broken conversation for user ${userId}`, {
-      hasState: !!state,
-      attempts: state?.attempts || 0,
-      error: error.message
-    })
+	static async handleBrokenConversation(
+		interaction: ChatInputCommandInteraction | ButtonInteraction | ModalSubmitInteraction,
+		error: Error
+	): Promise<void> {
+		const userId = interaction.user.id
+		const state = this.getConversationState(userId)
 
-    // Clear the broken state
-    this.clearConversationState(userId)
+		console.log(`🔧 Handling broken conversation for user ${userId}`, {
+			hasState: !!state,
+			attempts: state?.attempts || 0,
+			error: error.message
+		})
 
-    const message = state 
-      ? `🔄 **Conversation Reset**
+		// Clear the broken state
+		this.clearConversationState(userId)
+
+		const message = state
+			? `🔄 **Conversation Reset**
 
 Your previous game reporting session encountered an error and has been reset.
 
@@ -73,68 +73,68 @@ Your previous game reporting session encountered an error and has been reset.
 **Attempts made:** ${state.attempts}
 
 Please start over with a fresh \`/report\` command. Your data is safe!`
-      : `❌ **Session Error**
+			: `❌ **Session Error**
 
 There was an error with your request. Please try starting fresh with a new command.
 
 **Error:** ${error.message.substring(0, 100)}...`
 
-    try {
-      if (interaction.deferred || interaction.replied) {
-        await interaction.followUp({ content: message, ephemeral: true })
-      } else {
-        await interaction.reply({ content: message, ephemeral: true })
-      }
-    } catch (replyError) {
-      console.error('Failed to send conversation recovery message:', replyError)
-    }
-  }
+		try {
+			if (interaction.deferred || interaction.replied) {
+				await interaction.followUp({ content: message, ephemeral: true })
+			} else {
+				await interaction.reply({ content: message, ephemeral: true })
+			}
+		} catch (replyError) {
+			console.error('Failed to send conversation recovery message:', replyError)
+		}
+	}
 
-  static isConversationHealthy(userId: string): boolean {
-    const state = this.getConversationState(userId)
-    
-    if (!state) return true // No conversation is healthy
-    
-    return (
-      state.attempts < this.MAX_ATTEMPTS &&
-      (Date.now() - state.lastActivity) < this.CONVERSATION_TIMEOUT
-    )
-  }
+	static isConversationHealthy(userId: string): boolean {
+		const state = this.getConversationState(userId)
 
-  static cleanupOldConversations(): void {
-    const now = Date.now()
-    let cleanedCount = 0
-    
-    for (const [userId, state] of this.conversations.entries()) {
-      if (now - state.lastActivity > this.CONVERSATION_TIMEOUT) {
-        this.conversations.delete(userId)
-        cleanedCount++
-      }
-    }
-    
-    if (cleanedCount > 0) {
-      console.log(`🧹 Cleaned up ${cleanedCount} old conversations`)
-    }
-  }
+		if (!state) return true // No conversation is healthy
 
-  static getActiveConversationCount(): number {
-    return this.conversations.size
-  }
+		return (
+			state.attempts < this.MAX_ATTEMPTS &&
+			(Date.now() - state.lastActivity) < this.CONVERSATION_TIMEOUT
+		)
+	}
 
-  static getConversationStats(): {
-    active: number
-    avgAttempts: number
-    oldestConversation: number
-  } {
-    const conversations = Array.from(this.conversations.values())
-    const now = Date.now()
-    
-    return {
-      active: conversations.length,
-      avgAttempts: conversations.reduce((sum, c) => sum + c.attempts, 0) / conversations.length || 0,
-      oldestConversation: conversations.reduce((oldest, c) => 
-        Math.max(oldest, now - c.lastActivity), 0
-      )
-    }
-  }
+	static cleanupOldConversations(): void {
+		const now = Date.now()
+		let cleanedCount = 0
+
+		for (const [userId, state] of this.conversations.entries()) {
+			if (now - state.lastActivity > this.CONVERSATION_TIMEOUT) {
+				this.conversations.delete(userId)
+				cleanedCount++
+			}
+		}
+
+		if (cleanedCount > 0) {
+			console.log(`🧹 Cleaned up ${cleanedCount} old conversations`)
+		}
+	}
+
+	static getActiveConversationCount(): number {
+		return this.conversations.size
+	}
+
+	static getConversationStats(): {
+		active: number
+		avgAttempts: number
+		oldestConversation: number
+	} {
+		const conversations = Array.from(this.conversations.values())
+		const now = Date.now()
+
+		return {
+			active: conversations.length,
+			avgAttempts: conversations.reduce((sum, c) => sum + c.attempts, 0) / conversations.length || 0,
+			oldestConversation: conversations.reduce((oldest, c) =>
+				Math.max(oldest, now - c.lastActivity), 0
+			)
+		}
+	}
 }

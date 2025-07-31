@@ -12,22 +12,22 @@ export * from './LeagueService'
 export { validate, validateAIParseRequest } from '../utils/validation/index.js'
 
 // Re-export ALL types from database package (single source of truth)
-export type { 
-  Player,
-  Pod,
-  PodWithParticipants,
-  PodParticipant,
-  League,
-  LeagueWithProgress,
-  CreatePodInput,
-  CreateLeagueInput,
-  PlayerStats,
-  ScheduledPod,
-  // AI Types (should be moved to database package)
-  AIParseRequest,
-  AIParseResponse,
-  ParsedGameData,
-  ParsedPlayer
+export type {
+	Player,
+	Pod,
+	PodWithParticipants,
+	PodParticipant,
+	League,
+	LeagueWithProgress,
+	CreatePodInput,
+	CreateLeagueInput,
+	PlayerStats,
+	ScheduledPod,
+	// AI Types (should be moved to database package)
+	AIParseRequest,
+	AIParseResponse,
+	ParsedGameData,
+	ParsedPlayer
 } from '@dadgic/database'
 
 // TODO: Move AI types (AIParseRequest, AIParseResponse, etc.) to database package

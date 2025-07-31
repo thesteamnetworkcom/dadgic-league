@@ -17,6 +17,7 @@ export * from './leagues';
 // API types
 export * from './requests';
 export * from './responses';
+export * from './api';
 
 // Service-specific types
 export * from './matching';

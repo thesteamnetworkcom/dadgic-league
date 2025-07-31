@@ -4,20 +4,20 @@
 
 // Input variant - for creating players
 export interface PlayerInput {
-  name: string;
-  discord_id?: string | null;
-  discord_username?: string | null;
-  email?: string | null;
-  role?: 'player' | 'admin';
+	name: string;
+	discord_id?: string | null;
+	discord_username?: string | null;
+	email?: string | null;
+	role?: 'player' | 'admin';
 }
 
 // Update variant - for updating players (all optional)
 export interface PlayerUpdate {
-  name?: string;
-  discord_id?: string | null;
-  discord_username?: string | null;
-  email?: string | null;
-  role?: 'player' | 'admin';
+	name?: string;
+	discord_id?: string | null;
+	discord_username?: string | null;
+	email?: string | null;
+	role?: 'player' | 'admin';
 }
 
 // ============================================================================
@@ -25,7 +25,7 @@ export interface PlayerUpdate {
 // ============================================================================
 
 /** @deprecated Use PlayerInput instead */
-export interface CreatePlayerInput extends PlayerInput {}
+export interface CreatePlayerInput extends PlayerInput { }
 
 /** @deprecated Use PlayerInput instead */
 //export interface CreatePlayerRequest extends PlayerInput {}

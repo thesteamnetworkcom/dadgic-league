@@ -22,9 +22,9 @@ import { BaseQueries } from './queries/base';
 import { ScheduledPodQueries } from './queries/schedulePods';
 
 export const db = {
-  pods: PodQueries,
-  players: PlayerQueries,
-  leagues: LeagueQueries,
-  base: BaseQueries,
-  scheduledPods : ScheduledPodQueries
+	pods: PodQueries,
+	players: PlayerQueries,
+	leagues: LeagueQueries,
+	base: BaseQueries,
+	scheduledPods: ScheduledPodQueries
 };
