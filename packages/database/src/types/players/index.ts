@@ -9,6 +9,7 @@ export interface PlayerInput {
 	discord_username?: string | null;
 	email?: string | null;
 	role?: 'player' | 'admin';
+	auth_id?: string;
 }
 
 // Update variant - for updating players (all optional)
@@ -19,7 +20,6 @@ export interface PlayerUpdate {
 	email?: string | null;
 	role?: 'player' | 'admin';
 }
-
 // ============================================================================
 // LEGACY COMPATIBILITY - Will be removed gradually
 // ============================================================================

@@ -141,7 +141,7 @@ export class PodQueries extends BaseQueries {
 		clientType: ClientType = 'user'
 	): Promise<PodWithParticipants[]> {
 		const supabase = this.getClient(clientType);
-
+		const { data: sessionData } = await supabase.auth.getSession();
 		let query = supabase
 			.from('pods')
 			.select(`
@@ -150,8 +150,7 @@ export class PodQueries extends BaseQueries {
         *,
         player:players(*)
       )
-    `);
-
+    `);		
 		// League filtering (supports both single and multiple)
 		const leagueIds = filters.leagueIds || (filters.leagueId ? [filters.leagueId] : null);
 		if (leagueIds && leagueIds.length > 0) {
@@ -161,7 +160,6 @@ export class PodQueries extends BaseQueries {
 				query = query.in('league_id', leagueIds);
 			}
 		}
-
 		// Date filtering
 		if (filters.dateFrom) {
 			query = query.gte('date', filters.dateFrom);
@@ -170,7 +168,6 @@ export class PodQueries extends BaseQueries {
 		if (filters.dateTo) {
 			query = query.lte('date', filters.dateTo);
 		}
-
 		// Player filtering (supports both single and multiple)
 		const playerIds = filters.playerIds || (filters.playerId ? [filters.playerId] : null);
 		if (playerIds && playerIds.length > 0) {
@@ -182,7 +179,6 @@ export class PodQueries extends BaseQueries {
 					.from('pod_participants')
 					.select('pod_id')
 					.in('player_id', playerIds);
-
 				if (participantsError) throw participantsError;
 
 				const podIds = [...new Set(podParticipants.map(p => p.pod_id))]; // Remove duplicates
@@ -224,7 +220,7 @@ export class PodQueries extends BaseQueries {
 				query = query.in('id', podIds);
 			}
 		}
-
+		console.log(2)
 		// Apply ordering
 		query = query.order('date', { ascending: false });
 
@@ -236,9 +232,9 @@ export class PodQueries extends BaseQueries {
 		if (filters.offset) {
 			query = query.range(filters.offset, filters.offset + (filters.limit || 50) - 1);
 		}
-
+		console.log(query)	
 		const { data, error } = await query;
-
+		console.log(error)
 		if (error) throw error;
 
 		let results = data as PodWithParticipants[];

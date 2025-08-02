@@ -45,7 +45,8 @@ export async function POST(request: NextRequest) {
 			playerCount: body.player_identifiers?.length,
 			gamesPerPlayer: body.games_per_player
 		})
-
+		// 2. EXTRACT USER CONTEXT (league-specific requirement)
+		const authContext = await requireAdmin(request)
 		// 1. VALIDATE REQUEST (follow pod pattern)
 		const validation = validateLeagueRequest(body)
 		if (!validation.isValid) {
@@ -58,8 +59,7 @@ export async function POST(request: NextRequest) {
 			}, { status: 400 })
 		}
 
-		// 2. EXTRACT USER CONTEXT (league-specific requirement)
-		const authContext = await requireAdmin(request)
+		
 
 		// 3. CALL SERVICE (follow pod pattern)
 		const result = await createLeague(body, authContext)

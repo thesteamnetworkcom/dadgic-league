@@ -200,7 +200,7 @@ export class PlayerQueries extends BaseQueries {
 		this.validateRequired(playerId, 'player id');
 
 		const supabase = this.getClient(clientType);
-
+		console.log(updates);
 		try {
 			const { data, error } = await supabase
 				.from('players')

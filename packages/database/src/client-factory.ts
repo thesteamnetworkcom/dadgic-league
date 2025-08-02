@@ -1,25 +1,27 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-export type ClientType = 'user' | 'service';
-
+export type ClientType = 'user' | 'service' | 'server-user';
+interface ServerUserOptions {
+  accessToken: string;
+}
 export class SupabaseClientFactory {
 	private static clients: Map<ClientType, SupabaseClient> = new Map();
 
-	static getClient(type: ClientType = 'user'): SupabaseClient {
+	static getClient(type: ClientType = 'user', options?: ServerUserOptions): SupabaseClient {
 		if (!this.clients.has(type)) {
-			this.clients.set(type, this.createClient(type));
+			this.clients.set(type, this.createClient(type, options));
 		}
 		return this.clients.get(type)!;
 	}
 
-	private static createClient(type: ClientType): SupabaseClient {
-		const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-
+	private static createClient(type: ClientType, options?: ServerUserOptions): SupabaseClient {
+		const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;	
 		if (!url) {
 			throw new Error('Supabase URL not found in environment variables');
 		}
 
 		if (type === 'service') {
+			console.log(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 			const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 			if (!serviceKey) {
 				throw new Error('Service role key required for service client');
@@ -32,7 +34,31 @@ export class SupabaseClientFactory {
 				}
 			});
 		}
+		if (type === 'server-user') {
+			if (!options?.accessToken) {
+				throw new Error('Access token required for server-user client');
+			}
 
+			const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+			if (!anonKey) {
+				throw new Error('Supabase anonymous key not found for server-user client');
+			}
+			console.log("TOKEN:", options.accessToken);
+			// Create client with user's access token for server-side use
+			const client = createClient(url, anonKey, {
+				auth: {
+					autoRefreshToken: false,
+					persistSession: false
+				},
+				global: {
+					headers: {
+						Authorization: `Bearer ${options.accessToken}`
+					}
+				}
+			});
+
+			return client;
+		}
 		// User client
 		const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 		if (!anonKey) {
@@ -57,5 +83,9 @@ export class SupabaseClientFactory {
 			console.error(`Health check failed for ${type} client:`, error);
 			return false;
 		}
+	}
+	static getServerUserClient(accessToken: string): SupabaseClient {
+		console.log(accessToken)
+		return this.getClient('server-user', { accessToken });
 	}
 }

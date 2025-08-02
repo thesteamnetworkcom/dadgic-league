@@ -3,7 +3,7 @@
 // ============================================================================
 
 // TYPES - Import from database (single source of truth)
-export * from '@dadgic/database';
+//export * from '@dadgic/database';
 
 // SERVICES (Updated to use database types)
 export * from './services/PlayerService';
@@ -12,6 +12,7 @@ export * from './services/LeagueService';
 export * from './services/AIParsingService';
 export * from './services/PlayerMatchingService';
 export * from './services/PodGenerationService';
+export * from './services/AnalyticsService'
 
 // UTILITIES
 export * from './errors/APIError';

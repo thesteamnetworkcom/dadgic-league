@@ -1,5 +1,6 @@
 // src/lib/auth.ts
 import { supabase as dbSupabase, db } from '@dadgic/database'
+import { SupabaseClientFactory } from '@dadgic/database/src/client-factory'
 
 // Re-export the supabase client for use in other parts of the app
 export const supabase = dbSupabase
@@ -11,7 +12,8 @@ export type User = {
 	discord_username?: string
 	name?: string
 	avatar_url?: string,
-	role?: string
+	role?: string,
+	auth_id?: string
 }
 
 export type AuthState = {
@@ -61,15 +63,46 @@ export async function getCurrentUser(): Promise<User | null> {
 
 		// Get additional user data from our players table using your database
 		const playerData = await db.players.findByDiscordId(user.user_metadata?.provider_id)
-
+		console.log("Get Current User checking id values")
+		console.log(playerData?.id)
+		console.log(user.id)
 		return {
-			id: user.id,
+			id: playerData!.id,
 			email: user.email,
 			discord_id: user.user_metadata?.provider_id,
 			discord_username: user.user_metadata?.full_name,
 			name: playerData?.name || user.user_metadata?.full_name,
 			avatar_url: user.user_metadata?.avatar_url,
-			role: playerData?.role
+			role: playerData?.role,
+			auth_id: user.id
+		}
+	} catch (error) {
+		console.error('Error getting current user:', error)
+		return null
+	}
+}
+export async function getCurrentUserServer(accessToken: string): Promise<User | null>{
+	try{
+		const serverUserClient = SupabaseClientFactory.getServerUserClient(accessToken);
+		const { data: { user }, error } = await serverUserClient.auth.getUser()
+		if (error) throw error
+		if (!user || !user.id) {
+			throw new Error('Invalid or expired access token')
+		}
+		console.log(user)
+		const playerData = await db.players.findByDiscordId(user.user_metadata?.provider_id)
+		if(!playerData){
+			throw new Error('Invalid Player Data') //TODO: This is probably wrong
+		}
+		return {
+			id: playerData.id,
+			email: user.email,
+			discord_id: user.user_metadata?.provider_id,
+			discord_username: user.user_metadata?.full_name,
+			name: playerData?.name || user.user_metadata?.full_name,
+			avatar_url: user.user_metadata?.avatar_url,
+			role: playerData?.role,
+			auth_id: user.id
 		}
 	} catch (error) {
 		console.error('Error getting current user:', error)
@@ -120,11 +153,13 @@ export async function syncUserWithPlayer(user: User) {
 
 		if (existingPlayer) {
 			console.log('syncUserWithPlayer: Updating existing player...')
+			console.log(existingPlayer.id, user.id)
 			await db.players.update(existingPlayer.id, {
 				discord_id: user.discord_id || existingPlayer.discord_id, // Fill in discord_id if missing
 				discord_username: user.discord_username || existingPlayer.discord_username,
 				email: user.email || existingPlayer.email,
-				name: existingPlayer.name // Keep existing name, don't overwrite with Discord display name
+				name: existingPlayer.name, // Keep existing name, don't overwrite with Discord display name
+				auth_id: user.auth_id
 			})
 			console.log('syncUserWithPlayer: Update complete')
 		} else {

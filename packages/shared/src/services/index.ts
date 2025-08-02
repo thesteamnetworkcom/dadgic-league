@@ -7,6 +7,7 @@ export { AIParsingService, getAIParsingService, parseWithAI } from './AIParsingS
 export * from './PodService'
 export * from './PlayerService'
 export * from './LeagueService'
+export * from './AnalyticsService'
 
 // Utility exports
 export { validate, validateAIParseRequest } from '../utils/validation/index.js'

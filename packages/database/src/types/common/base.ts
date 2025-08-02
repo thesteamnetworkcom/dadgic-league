@@ -42,3 +42,14 @@ export interface ResponseBase<T = any> {
 
 // Re-export for convenience
 export type APIResponse<T = any> = ResponseBase<T>;
+export interface APIError extends Error {
+	status: number
+	response?: APIResponse
+}
+
+export interface StatItem {
+  label: string
+  value: string | number
+  subtext?: string
+  status?: 'win' | 'lose' | 'neutral' | 'highlight'
+}

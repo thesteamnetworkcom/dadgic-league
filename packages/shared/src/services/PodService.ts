@@ -181,7 +181,7 @@ export async function listPods(filters: {
  */
 export async function deletePod(podId: string, authContext?: DatabaseAuthContext): Promise<void> {
 	try {
-		console.log('🗑️ Deleting pod:', { podId, authContext?.user_id })
+		console.log('🗑️ Deleting pod:', { podId, userID: authContext?.user_id })
 
 		// Check if pod exists
 		await getPodById(podId)
@@ -305,11 +305,6 @@ export async function getGameById(gameId: string): Promise<PodDisplay> {
 /** @deprecated Use listPods instead */
 export async function listGames(filters?: { playerId?: string; leagueId?: string; dateFrom?: string; dateTo?: string; limit?: number; offset?: number }): Promise<PodDisplay[]> {
 	return listPods(filters)
-}
-
-/** @deprecated Use deletePod instead */
-export async function deleteGame(gameId: string, userId?: string): Promise<void> {
-	return deletePod(gameId, userId)
 }
 
 /** @deprecated Use getPodService instead */

@@ -3,7 +3,7 @@ import { getPlayerService, handleAPIError } from '@dadgic/shared'
 import { validatePlayerRequest } from '@dadgic/shared'
 import { createPlayer } from '@dadgic/shared'
 import { ValidationError } from '@dadgic/shared'
-import type { PlayerInput } from '@dadgic/shared'
+import type { PlayerInput } from '@dadgic/database'
 import { requireAdmin } from '@/lib/auth-middleware'
 
 export async function GET(request: NextRequest) {

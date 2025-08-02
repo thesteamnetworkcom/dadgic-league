@@ -9,6 +9,7 @@ export interface Player {
 	discord_username: string | null;
 	email: string | null;
 	role: 'player' | 'admin';
+	auth_id?: string;
 	created_at: string;
 	updated_at: string;
 }
@@ -66,15 +67,4 @@ export interface LeagueWithProgress extends League {
 	completed_count: number;
 	total_count: number;
 	completion_percentage: number;
-}
-
-export interface PlayerStats {
-	player_id: string;
-	player_name: string;
-	pods_played: number; // UPDATED: games_played → pods_played
-	wins: number;
-	losses: number;
-	draws: number;
-	win_rate: number;
-	favorite_commanders: string[];
 }
