@@ -1,109 +1,106 @@
-// src/lib/api/services.ts
-import { apiClient } from './client'
-import {
-  type Pod,
-  type Player,
-  type League,
-  type CreatePodRequest,
-  type CreatePlayerRequest,
-  type CreateLeagueRequest,
-  type ParseRequest,
-  type ParseResponse,
-  type PlayerStats,
-  type PodInsight,
-  type PodWithParticipants,
-  supabase
+// apps/web/src/lib/api/services.ts
+// Updated API services with automatic auth token inclusion
+
+import { apiGet, apiPost, apiPut, apiDelete } from './client'
+import type { 
+  Pod, 
+  Player, 
+  PlayerStats, 
+  PodInsight, 
+  ParseRequest, 
+  CreatePodRequest, 
+  ParseResponse, 
+  PodWithParticipants, 
+  APIResponse
 } from '@dadgic/database'
 
-// Game/Pod Services
+// ============================================================================
+// POD SERVICE - Auto-auth enabled
+// ============================================================================
+
 export const podService = {
-  async create(data: CreatePodRequest) {
-    return apiClient.post<Pod>('/pod', data)
+  async getRecent(limit: number = 10): Promise<APIResponse<Pod[]>> {
+    return apiGet<Pod[]>(`/api/pods?limit=${limit}`)
   },
 
-  async getAll() {
-    return apiClient.get<Pod[]>('/pods')
+  async getById(id: string): Promise<APIResponse<Pod>> {
+    return apiGet<Pod>(`/api/pods/${id}`)
   },
 
-  async getById(id: string) {
-    return apiClient.get<Pod>(`/pods/${id}`)
-  },
-
-  async update(id: string, data: Partial<CreatePodRequest>) {
-    return apiClient.put<Pod>(`/pods/${id}`, data)
-  },
-
-  async delete(id: string) {
-    return apiClient.delete<Pod>(`/pods/${id}`)
-  },
-
-  async getRecent(limit: number = 10) {
-    return apiClient.get<Pod[]>(`/pods/recent?limit=${limit}`)
+  async create(data: CreatePodRequest): Promise<APIResponse<Pod>> {
+    return apiPost<Pod>('/api/pods', data)
   }
 }
 
-// Player Services
+// ============================================================================
+// PLAYER SERVICE - Auto-auth enabled
+// ============================================================================
+
 export const playerService = {
-  async create(data: CreatePlayerRequest) {
-    return apiClient.post<Player>('/players', data)
+  async getAll(): Promise<APIResponse<Player[]>> {
+    return apiGet<Player[]>('/api/players')
   },
 
-  async getAll() {
-    return apiClient.get<Player[]>('/players')
+  async getStats(playerId?: string): Promise<APIResponse<PlayerStats>> {
+    const url = playerId 
+      ? `/api/players/${playerId}/stats`
+      : '/api/players/me/stats'
+    return apiGet<PlayerStats>(url)
   },
 
-  async getById(id: string) {
-    return apiClient.get<Player>(`/players/${id}`)
+  async search(query: string): Promise<APIResponse<Player[]>> {
+    return apiGet<Player[]>(`/api/players?search=${encodeURIComponent(query)}`)
   },
 
-  async getStats(playerId?: string) {
-    const endpoint = playerId ? `/players/${playerId}/stats` : '/players/me/stats'
-    return apiClient.get<PlayerStats>(endpoint)
-  },
-
-  async search(query: string) {
-    return apiClient.get<Player[]>(`/players/search?q=${encodeURIComponent(query)}`)
+  async create(data: any): Promise<APIResponse<Player>> {
+    return apiPost<Player>('/api/players', data)
   }
 }
 
-// League Services
-export const leagueService = {
-  async create(data: CreateLeagueRequest) {
-    return apiClient.post<League>('/leagues', data)
-  },
+// ============================================================================
+// ANALYTICS SERVICE - Auto-auth enabled
+// ============================================================================
 
-  async getAll() {
-    return apiClient.get<League[]>('/leagues')
-  },
-
-  async getById(id: string) {
-    return apiClient.get<League>(`/leagues/${id}`)
-  }
-}
-
-// AI Parsing Service
-export const aiService = {
-  async parse(data: ParseRequest) {
-    return apiClient.post<ParseResponse>('/ai/parse', data)
-  }
-}
-
-// Analytics/Insights Services
 export const analyticsService = {
-  async getInsights(playerId?: string) {
-    const endpoint = playerId ? `/analytics/insights/${playerId}` : '/analytics/insights/me'
-    return apiClient.get<PodInsight[]>(endpoint)
+  async getInsights(playerId?: string): Promise<APIResponse<PodInsight[]>> {
+    const url = playerId 
+      ? `/api/analytics/insights/${playerId}`
+      : '/api/analytics/insights/me'
+    return apiGet<PodInsight[]>(url)
   },
 
-  async getDashboardStats(playerId?: string) {
-    const endpoint = playerId ? `/analytics/dashboard/${playerId}` : '/analytics/dashboard/me'
-    // Get access token from Supabase session
-    const { data: { session } } = await supabase.auth.getSession()
-    const accessToken = session?.access_token
-    return apiClient.get<{
-      stats: PlayerStats
-      recent_games: PodWithParticipants[]
-      insights: PodInsight[]
-    }>(endpoint, accessToken)
+  async getDashboardStats(playerId?: string): Promise<APIResponse<{
+    stats: PlayerStats
+    recent_games: PodWithParticipants[]
+    insights: PodInsight[]
+  }>> {
+    // ✅ SIMPLIFIED: No more manual token handling
+    const url = playerId 
+      ? `/api/analytics/dashboard/${playerId}`
+      : '/api/analytics/dashboard/me'
+    return apiGet(url)
   }
 }
+
+// ============================================================================
+// AI SERVICE - No auth needed for parsing
+// ============================================================================
+
+export const aiService = {
+  async parse(data: ParseRequest): Promise<APIResponse<ParseResponse>> {
+    return apiPost<ParseResponse>('/api/ai/parse', data)
+  }
+}
+
+// ============================================================================
+// WHAT THIS FIXES:
+//
+// 1. ✅ All API calls now automatically include Authorization header
+// 2. ✅ Tokens are pulled fresh from Supabase session each time
+// 3. ✅ No more manual token passing in service calls
+// 4. ✅ 401 responses automatically clear session cache
+// 5. ✅ Consistent auth handling across all endpoints
+//
+// The auth middleware should now receive:
+// Authorization: Bearer {fresh_supabase_access_token}
+// ============================================================================

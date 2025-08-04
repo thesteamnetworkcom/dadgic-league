@@ -36,9 +36,6 @@ export async function getDashboardData(playerId?: string, authContext?: Database
 
     // 3. FETCH DATA (parallel for performance)
     console.log('🔄 Fetching dashboard components in parallel')
-    console.log(targetPlayerId)
-    console.log(authContext?.user_id)
-    console.log(authContext?.supabase_user_id)
     const [stats, recentGames, insights] = await Promise.all([
       calculatePlayerStats(targetPlayerId),
       getRecentGames(targetPlayerId, 10),
@@ -81,8 +78,6 @@ export async function getDashboardData(playerId?: string, authContext?: Database
 async function calculatePlayerStats(playerId: string): Promise<PlayerStats> {
   try {
     // Get all pods for this player (using existing listPods with filter)
-    console.log("TESTTESTTEST")
-    console.log(playerId)
     const pods = await db.pods.list({ playerId: playerId }, 'server-user')
     if (pods.length === 0) {
       return {

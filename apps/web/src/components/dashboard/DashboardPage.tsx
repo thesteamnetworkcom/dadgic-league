@@ -7,12 +7,14 @@ import { InsightTerminal } from '../terminal/InsightTerminal'
 import { TerminalSpinner } from '../terminal/TerminalSpinner'
 import { useDashboardData } from '@/lib/api/hooks'
 import { StatItem } from '@dadgic/database'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface DashboardPageProps {
   className?: string
 }
 
 export function DashboardPage({ className = '' }: DashboardPageProps) {
+  const { user } = useAuth()
   const { data: dashboardData, loading, error, refetch } = useDashboardData()
   
   if (loading) {
@@ -74,12 +76,12 @@ export function DashboardPage({ className = '' }: DashboardPageProps) {
   const recentGames = dashboardData?.recent_games?.map(game => ({
     date: new Date(game.date).toLocaleDateString(),
     opponents: game.participants
-      .filter(p => p.player_id !== 'win')
+      .filter(p => p.player_id !== user?.id)
       .map(p => p.player?.name || 'Unknown')
       .join(', '),
     commander: game.participants
       .find(p => p.result === 'win')?.commander_deck || 'Unknown',
-    result: game.participants.some(p => p.result === 'win') ? 'W' : 'L',
+    result: game.participants.some(p => p.player_id === user?.id && p.result === 'win') ? 'W' : 'L',
     length: game.game_length_minutes ? `${game.game_length_minutes}m` : 'Unknown'
   })) || []
 

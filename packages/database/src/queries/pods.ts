@@ -220,7 +220,6 @@ export class PodQueries extends BaseQueries {
 				query = query.in('id', podIds);
 			}
 		}
-		console.log(2)
 		// Apply ordering
 		query = query.order('date', { ascending: false });
 
@@ -232,9 +231,7 @@ export class PodQueries extends BaseQueries {
 		if (filters.offset) {
 			query = query.range(filters.offset, filters.offset + (filters.limit || 50) - 1);
 		}
-		console.log(query)	
 		const { data, error } = await query;
-		console.log(error)
 		if (error) throw error;
 
 		let results = data as PodWithParticipants[];

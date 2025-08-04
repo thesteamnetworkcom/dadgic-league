@@ -14,7 +14,7 @@ export default function AppLayout({ children, showNavigation = true }: AppLayout
 	const { user, loading } = useAuth()
 
 	// Don't show navigation on auth pages or when loading
-	const shouldShowNav = showNavigation && !loading && user
+	const shouldShowNav = showNavigation && user
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900">

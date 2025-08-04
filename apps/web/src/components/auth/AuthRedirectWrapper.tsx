@@ -24,7 +24,7 @@ export function AuthRedirectWrapper({
       console.log('AuthRedirectWrapper: redirecting to dashboard')
       router.push(redirectTo)
     }
-  }, [user, loading, router, redirectTo])
+  }, [user, loading, redirectTo])
 
   // Show loading state while checking auth
   if (loading) {

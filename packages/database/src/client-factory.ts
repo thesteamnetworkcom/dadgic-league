@@ -21,7 +21,6 @@ export class SupabaseClientFactory {
 		}
 
 		if (type === 'service') {
-			console.log(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 			const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 			if (!serviceKey) {
 				throw new Error('Service role key required for service client');
@@ -43,7 +42,6 @@ export class SupabaseClientFactory {
 			if (!anonKey) {
 				throw new Error('Supabase anonymous key not found for server-user client');
 			}
-			console.log("TOKEN:", options.accessToken);
 			// Create client with user's access token for server-side use
 			const client = createClient(url, anonKey, {
 				auth: {
@@ -85,7 +83,6 @@ export class SupabaseClientFactory {
 		}
 	}
 	static getServerUserClient(accessToken: string): SupabaseClient {
-		console.log(accessToken)
 		return this.getClient('server-user', { accessToken });
 	}
 }

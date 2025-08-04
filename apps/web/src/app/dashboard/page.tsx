@@ -19,7 +19,7 @@ export default function Dashboard() {
       console.log('Dashboard: redirecting to landing - no user')
       router.push('/')
     }
-  }, [user, loading, router])
+  }, [user, loading])
 
   // Show loading while checking auth
   if (loading) {

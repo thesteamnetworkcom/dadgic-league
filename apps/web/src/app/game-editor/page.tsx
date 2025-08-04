@@ -31,7 +31,7 @@ export default function GameEditor() {
         }
       }
     }
-  }, [user, loading, router])
+  }, [user, loading])
 
   // Show loading while checking auth
   if (loading) {

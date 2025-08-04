@@ -1,4 +1,6 @@
-// src/app/auth/callback/page.tsx
+// apps/web/src/app/auth/callback/page.tsx
+// Simplified auth callback that trusts the auth state change event
+
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -11,50 +13,50 @@ export default function AuthCallback() {
 	const [error, setError] = useState<string | null>(null)
 
 	useEffect(() => {
-		console.log('Auth callback component mounted')
+		console.log('🔒 Auth callback: Setting up listener')
 
-		// Listen for auth state changes instead of trying to get user immediately
+		// ✅ SIMPLIFIED: Just listen for auth state changes, no manual checks
 		const { data: { subscription } } = supabase.auth.onAuthStateChange(
 			async (event, session) => {
-				console.log('Auth state change in callback:', event, session?.user?.id)
+				console.log('🔒 Auth callback - state change:', event, session?.user?.id)
 
 				if (event === 'SIGNED_IN' && session?.user) {
-					console.log('User signed in successfully:', session.user.id)
+					console.log('🔒 Sign in successful, redirecting to dashboard')
 					setStatus('success')
-
-					// Redirect to dashboard
+					
+					// Short delay for user feedback, then redirect
 					setTimeout(() => {
 						router.push('/dashboard')
-					}, 2000)
+					}, 1500)
+					
 				} else if (event === 'SIGNED_OUT') {
-					console.log('User signed out')
+					console.log('🔒 Sign out detected in callback')
 					setError('Authentication failed')
 					setStatus('error')
+					
+				} else if (event === 'TOKEN_REFRESHED') {
+					console.log('🔒 Token refreshed during callback')
+					// This might happen during OAuth flow, continue waiting
+					
+				} else {
+					console.log('🔒 Other auth event:', event)
+					// For other events, just continue waiting
 				}
 			}
 		)
 
-		// Also try to get current session as fallback
-		const checkSession = async () => {
-			const { data: { session } } = await supabase.auth.getSession()
-			console.log('Current session check:', session?.user?.id)
+		// ✅ REMOVED: Manual session checks, setTimeout fallbacks, redundant getSession calls
+		// The auth state change listener is the single source of truth
 
-			if (session?.user) {
-				console.log('Found existing session, redirecting...')
-				setStatus('success')
-				setTimeout(() => {
-					router.push('/dashboard')
-				}, 1000)
-			}
+		// Clean up on unmount
+		return () => {
+			console.log('🔒 Auth callback: Cleaning up listener')
+			subscription.unsubscribe()
 		}
-
-		// Check session after a brief delay to let auth settle
-		setTimeout(checkSession, 1000)
-
-		return () => subscription.unsubscribe()
 	}, [router])
 
 	const handleRetry = () => {
+		console.log('🔒 Auth callback: Retrying authentication')
 		router.push('/')
 	}
 
@@ -62,11 +64,14 @@ export default function AuthCallback() {
 		<div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 flex items-center justify-center">
 			<div className="max-w-md w-full mx-4">
 				<div className="bg-neutral-800/50 backdrop-blur-sm border border-neutral-700 rounded-xl p-8 text-center">
+					
 					{status === 'loading' && (
 						<>
 							<div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
 							<h2 className="text-2xl font-bold text-white mb-2">Completing Sign In</h2>
-							<p className="text-neutral-400">Please wait while we process your authentication...</p>
+							<p className="text-neutral-400">
+								Waiting for authentication to complete...
+							</p>
 						</>
 					)}
 
@@ -77,8 +82,10 @@ export default function AuthCallback() {
 									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
 								</svg>
 							</div>
-							<h2 className="text-2xl font-bold text-white mb-2">Welcome!</h2>
-							<p className="text-neutral-400">Successfully signed in. Redirecting to dashboard...</p>
+							<h2 className="text-2xl font-bold text-white mb-2">Welcome to Dadgic!</h2>
+							<p className="text-neutral-400">
+								Authentication successful. Redirecting to dashboard...
+							</p>
 						</>
 					)}
 
@@ -90,15 +97,18 @@ export default function AuthCallback() {
 								</svg>
 							</div>
 							<h2 className="text-2xl font-bold text-white mb-2">Authentication Failed</h2>
-							<p className="text-neutral-400 mb-4">{error || 'An error occurred during sign in'}</p>
+							<p className="text-neutral-400 mb-4">
+								{error || 'Unable to complete sign in. Please try again.'}
+							</p>
 							<button
 								onClick={handleRetry}
-								className="bg-primary-500 hover:bg-primary-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+								className="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
 							>
 								Try Again
 							</button>
 						</>
 					)}
+
 				</div>
 			</div>
 		</div>

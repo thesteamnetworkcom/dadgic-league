@@ -39,7 +39,7 @@ export default function MonitoringDashboard() {
 		if (user) {
 			fetchHealthData()
 		}
-	}, [user, loading, router])
+	}, [user, loading])
 
 	useEffect(() => {
 		if (!autoRefresh) return

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { getCurrentUser, getCurrentUserServer } from './auth'
+import { getCurrentUser } from './auth'
 import { AuthContext } from '@dadgic/database/src/types/api'
 
 
@@ -9,12 +9,12 @@ export async function extractAuthContext(request: NextRequest): Promise<AuthCont
 		if (!accessToken) {
 			throw new Error('Access token not found in request')
 		}
-		const user = await getCurrentUserServer(accessToken)
+		const user = await getCurrentUser(accessToken)
 
 		if (!user || !user.auth_id) {
 			throw new Error('Authentication required')
 		}
-		console.log("AUTHCONTEXT: ", user)
+		
 		return {
 			user_id: user.id,
 			supabase_user_id: user.auth_id,
@@ -29,10 +29,8 @@ export async function extractAuthContext(request: NextRequest): Promise<AuthCont
  * Extract access token from request headers or cookies
  */
 function extractAccessToken(request: NextRequest): string | null {
-	console.log(request.headers)
 	// Try Authorization header first (Bearer token)
 	const authHeader = request.headers.get('authorization')
-	console.log(authHeader);
 	if (authHeader?.startsWith('Bearer ')) {
 		return authHeader.replace('Bearer ', '')
 	}

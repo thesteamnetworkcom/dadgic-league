@@ -11,14 +11,14 @@ import { LandingLayout } from '@/components/landing/LandingLayout'
 import { LandingHero } from '@/components/landing/LandingHero'
 import { ComparisonSection } from '@/components/landing/ComparisonSection'
 import { CTASection } from '@/components/landing/CTASection'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function LandingPage() {
-  const [isAuthLoading, setIsAuthLoading] = useState(false)
+  const { loading } = useAuth()  // This is sufficient
   const { showToast } = useToast()
 
   const handleDiscordAuth = async () => {
     try {
-      setIsAuthLoading(true)
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'discord',
         options: {
@@ -29,13 +29,11 @@ export default function LandingPage() {
       if (error) {
         console.error('Discord auth error:', error)
         showToast('Authentication failed. Please try again.', 'error')
-        setIsAuthLoading(false)
       }
       // Note: Don't set loading to false on success - redirect will happen
     } catch (error) {
       console.error('Error during Discord authentication:', error)
       showToast('Authentication error. Please try again.', 'error')
-      setIsAuthLoading(false)
     }
   }
 
@@ -46,7 +44,7 @@ export default function LandingPage() {
         <ComparisonSection />
         <CTASection 
           onDiscordAuth={handleDiscordAuth}
-          isLoading={isAuthLoading}
+          isLoading={loading}
         />
       </LandingLayout>
     </AuthRedirectWrapper>
