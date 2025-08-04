@@ -27,7 +27,6 @@ export function GameLogger({ onParseComplete, className = '' }: GameLoggerProps)
         })
 
         if (result) {
-            console.log(result)
           // Store parsed data for the JSON editor
           if (typeof window !== 'undefined') {
             sessionStorage.setItem('parsedGameData', JSON.stringify(result))

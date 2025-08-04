@@ -1,6 +1,5 @@
 // packages/database/src/queries/leagues.ts
-import { supabase } from '../client';
-import { ClientType } from '../client-factory';
+import { ClientType, SupabaseClientFactory } from '../client-factory';
 import { League, LeagueWithProgress, CreateLeagueInput, ScheduledPod, PodWithParticipants, ParticipantInput, PlayerIdentifier, LeagueResolved, Player } from '../types';
 import { BaseQueries } from './base';
 
@@ -10,7 +9,7 @@ export class LeagueQueries extends BaseQueries {
 		// Sort player IDs for consistent comparison
 		const sortedPlayerIds = [...playerIds].sort();
 
-		const { data, error } = await supabase
+		const { data, error } = await this.getClient()
 			.from('scheduled_pods')
 			.select(`
       *,
@@ -33,7 +32,7 @@ export class LeagueQueries extends BaseQueries {
 
 	// Also add a helper to get league info for logging
 	static async getLeagueInfo(scheduledPodId: string): Promise<{ leagueName: string, leagueId: string } | null> {
-		const { data, error } = await supabase
+		const { data, error } = await this.getClient()
 			.from('scheduled_pods')
 			.select(`
       league_id,
@@ -82,7 +81,7 @@ export class LeagueQueries extends BaseQueries {
 	}
 
 	static async getAll(): Promise<LeagueWithProgress[]> {
-		const { data, error } = await supabase
+		const { data, error } = await this.getClient()
 			.from('leagues')
 			.select(`
         *,
@@ -100,7 +99,7 @@ export class LeagueQueries extends BaseQueries {
 	}
 
 	static async getById(id: string): Promise<LeagueWithProgress | null> {
-		const { data, error } = await supabase
+		const { data, error } = await this.getClient()
 			.from('leagues')
 			.select(`
         *,
@@ -168,7 +167,7 @@ export class LeagueQueries extends BaseQueries {
 
 	// ADD THIS NEW METHOD for updating status
 	static async updateStatus(id: string, status: 'draft' | 'active' | 'completed'): Promise<void> {
-		const { error } = await supabase
+		const { error } = await this.getClient()
 			.from('leagues')
 			.update({ status })
 			.eq('id', id);
@@ -199,7 +198,7 @@ export class LeagueQueries extends BaseQueries {
 
 	// Keep all your existing methods...
 	static async getScheduledPods(leagueId: string): Promise<ScheduledPod[]> {
-		const { data, error } = await supabase
+		const { data, error } = await this.getClient()
 			.from('scheduled_pods')
 			.select('*')
 			.eq('league_id', leagueId)
@@ -210,7 +209,7 @@ export class LeagueQueries extends BaseQueries {
 	}
 
 	static async getUncompletedPods(leagueId: string): Promise<ScheduledPod[]> {
-		const { data, error } = await supabase
+		const { data, error } = await this.getClient()
 			.from('scheduled_pods')
 			.select('*')
 			.eq('league_id', leagueId)
@@ -222,7 +221,7 @@ export class LeagueQueries extends BaseQueries {
 	}
 
 	static async markPodComplete(scheduledPodId: string, completedPodId: string): Promise<void> {
-		const { error } = await supabase
+		const { error } = await this.getClient()
 			.from('scheduled_pods')
 			.update({ completed_pod_id: completedPodId })
 			.eq('id', scheduledPodId);
@@ -232,7 +231,7 @@ export class LeagueQueries extends BaseQueries {
 
 	static async getPodsWithParticipants(leagueId: string): Promise<PodWithParticipants[]> {
 		// Get all completed pods for this league
-		const { data, error } = await supabase
+		const { data, error } = await this.getClient()
 			.from('pods')
 			.select(`
         *,
@@ -249,7 +248,7 @@ export class LeagueQueries extends BaseQueries {
 	}
 
 	static async update(id: string, updates: Partial<CreateLeagueInput>): Promise<League> {
-		const { data, error } = await supabase
+		const { data, error } = await this.getClient()
 			.from('leagues')
 			.update(updates)
 			.eq('id', id)
@@ -261,7 +260,7 @@ export class LeagueQueries extends BaseQueries {
 	}
 
 	static async delete(id: string): Promise<void> {
-		const { error } = await supabase
+		const { error } = await this.getClient()
 			.from('leagues')
 			.delete()
 			.eq('id', id);

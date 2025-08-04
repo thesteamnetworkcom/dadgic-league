@@ -472,22 +472,17 @@ Return JSON with:
 	}
 	private calculatePodConfidence(data: ParsedPodData, originalText: string): number {
 		let confidence = 0.6
-		console.log("Step 1")
 		if (data.game_length_minutes && data.game_length_minutes > 0) confidence += 0.1
 		if (data.turns && data.turns > 0) confidence += 0.05
 		if (data.notes && data.notes.trim().length > 5) confidence += 0.1
 		if (data.participants.length >= 3 && data.participants.length <= 4) confidence += 0.1
-		console.log("Step 2, already broke?")
 		const avgCommanderLength = data.participants.reduce((sum, p) => sum + (p.commander_deck?.length ?? 0), 0) / data.participants.length
-		console.log("Its this one")
 		if (avgCommanderLength > 8) confidence += 0.1
-		console.log("step 3?!?!?!")
 		const hasGenericNames = data.participants.some(p =>
 			/^(player|user|person)\s*\d*$/i.test(p.player_identifier)||
 			p.commander_deck ? /^(unknown|test|sample)$/i.test(p.commander_deck) : null
 		)
 		if (hasGenericNames) confidence -= 0.2
-		console.log("I don't think we are getting here?")
 		return Math.max(0.1, Math.min(confidence, 1.0))
 	}
 	private calculatePlayerConfidence(data: any, originalText: string): number {

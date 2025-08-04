@@ -43,7 +43,6 @@ export function GameEditorPage({
           result: player.result === 'W' ? 'win' : player.result === 'L' ? 'lose' : player.result
         }))
       }
-      console.log(podData)
       const result = await createPod(podData)
       
       if (result) {

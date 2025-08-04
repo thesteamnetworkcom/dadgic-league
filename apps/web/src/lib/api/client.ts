@@ -1,8 +1,9 @@
 // apps/web/src/lib/api/client.ts
 // Fixed API client that automatically includes auth tokens
 
+import { SupabaseClientFactory } from '@dadgic/database/src/client-factory'
 import { clearSessionCache } from '../auth-session'
-import { APIResponse, supabase } from '@dadgic/database'
+import { APIResponse } from '@dadgic/database'
 
 /**
  * Enhanced fetch wrapper with automatic auth token inclusion
@@ -13,7 +14,7 @@ export async function apiCall(
 ): Promise<Response> {
   try {
     // ✅ AUTO-INCLUDE AUTH TOKEN from Supabase session
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { session } } = await SupabaseClientFactory.getClient().auth.getSession()
     const accessToken = session?.access_token
 
     const headers: Record<string, string> = {

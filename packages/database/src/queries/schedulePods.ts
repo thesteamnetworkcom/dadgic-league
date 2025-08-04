@@ -1,8 +1,6 @@
 import { BaseQueries } from ".."
 import { ClientType } from "../client-factory";
 import { ScheduledPod } from "../types"
-import { supabase } from '../client';
-
 export class ScheduledPodQueries extends BaseQueries {
 	static async findByPlayers(playerIds: string[], clientType: ClientType = 'user'): Promise<ScheduledPod | null> {
 		const supabase = this.getClient(clientType);
@@ -26,7 +24,7 @@ export class ScheduledPodQueries extends BaseQueries {
 	}
 
 	static async markCompleted(scheduledPodId: string, podId: string): Promise<void> {
-		const { error } = await supabase
+		const { error } = await this.getClient()
 			.from('scheduled_pods')
 			.update({ completed_pod_id: podId })
 			.eq('id', scheduledPodId);
@@ -35,7 +33,7 @@ export class ScheduledPodQueries extends BaseQueries {
 	}
 
 	static async countIncomplete(leagueId: string): Promise<number> {
-		const { count, error } = await supabase
+		const { count, error } = await this.getClient()
 			.from('scheduled_pods')
 			.select('*', { count: 'exact', head: true })
 			.eq('league_id', leagueId)

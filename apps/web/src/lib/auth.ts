@@ -1,10 +1,10 @@
 // src/lib/auth.ts
-import { supabase as dbSupabase, db } from '@dadgic/database'
+import { db } from '@dadgic/database'
 import { SupabaseClientFactory } from '@dadgic/database/src/client-factory'
 import { clearSessionCache, getCachedUser, isSessionValid, setSessionCache } from './auth-session'
 
 // Re-export the supabase client for use in other parts of the app
-export const supabase = dbSupabase
+export const supabase = SupabaseClientFactory.getClient()
 
 export type User = {
 	id: string

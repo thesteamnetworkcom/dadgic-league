@@ -33,7 +33,6 @@ export async function createPod(podData: PodInput, authContext?: DatabaseAuthCon
 			participantsCount: podData.participants.length,
 			authContext: authContext?.user_id
 		})
-		console.log(podData)
 		//await validateCurrentUserIsAdmin(authContext)
 		// 1. VALIDATE UNRESOLVED POD DATA
 		const initialValidation = validatePodRequest(podData)

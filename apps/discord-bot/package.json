@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js"
+    "dev": "tsx --env-file=.env.local src/index.ts",
+    "build": "tsc", 
+    "start": "node --env-file=.env.local dist/index.js"
   },
   "dependencies": {
     "@dadgic/database": "file:../../packages/database",

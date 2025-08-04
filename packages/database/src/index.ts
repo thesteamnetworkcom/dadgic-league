@@ -12,7 +12,6 @@ export * from './queries/leagues';
 export * from './queries/base';
 
 // Legacy client (deprecated)
-export { supabase } from './client';
 
 // Main database interface
 import { PodQueries } from './queries/pods';
