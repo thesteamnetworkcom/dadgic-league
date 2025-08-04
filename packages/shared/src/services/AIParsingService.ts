@@ -163,28 +163,46 @@ export class AIParsingService {
 				}
 
 				console.log(`📝 AI Response (attempt ${attempt}):`, responseText.substring(0, 200) + '...')
-
 				const parsedData = this.parseAIResponse(responseText)
 				const confidence = this.calculateConfidence(parsedData, text)
-
-				this.validateParsedData(parsedData, context?.domain || 'pod')
-
-				return { ...parsedData, confidence }
+				try {
+                	this.validateParsedData(parsedData, context?.domain || 'pod')
+                	// If validation passes, return the data
+                	return { ...parsedData, confidence }
+            	} catch (error) {
+					lastError = error as Error
+                	// ✅ VALIDATION FAILED - but AI succeeded in parsing
+                	// Don't retry - return the data with validation errors
+                	console.warn(`⚠️ AI parsing succeeded but validation failed:`, lastError.message)
+                
+                	// Return the parsed data with validation errors attached
+                	return {
+						...parsedData,
+						confidence,
+						validationErrors: lastError.message,
+						requiresManualInput: true
+                	}
+            }
 
 			} catch (error) {
 				lastError = error as Error
 				console.warn(`⚠️ AI Parse Attempt ${attempt} failed:`, lastError.message)
 
-				if (lastError.message.includes('Invalid AI response') ||
-					lastError.message.includes('validation failed')) {
-					break
-				}
-
-				if (attempt < this.maxRetries) {
-					const delay = 1000 * attempt
-					console.log(`⏱️ Retrying in ${delay}ms...`)
-					await new Promise(resolve => setTimeout(resolve, delay))
-				}
+				// Only retry for actual AI/parsing failures, not validation failures
+            	if (lastError.message.includes('Invalid AI response') ||
+                lastError.message.includes('Empty response') ||
+                lastError.message.includes('timeout')) {
+                
+					if (attempt < this.maxRetries) {
+						const delay = 1000 * attempt
+						console.log(`⏱️ Retrying in ${delay}ms...`)
+						await new Promise(resolve => setTimeout(resolve, delay))
+						continue
+					}
+            	}
+            
+            // For other errors, don't retry
+           	 	break
 			}
 		}
 
@@ -267,10 +285,10 @@ export class AIParsingService {
                 "game_length_minutes": 90,
                 "turns": 12,
                 "notes": "Brief summary",
-                "players": [
-                  { "name": "Scott", "commander": "Atraxa, Praetors' Voice", "result": "win" },
-                  { "name": "Mike", "commander": "Krenko, Mob Boss", "result": "lose" },
-                  { "name": "Sarah", "commander": "Meren of Clan Nel Toth", "result": "lose" }
+                "participants": [
+                  { "player_identifier": "Scott", "commander_deck": "Atraxa, Praetors' Voice", "result": "win" },
+                  { "player_identifier": "Mike", "commander_deck": "Krenko, Mob Boss", "result": "lose" },
+                  { "player_identifier": "Sarah", "commander_deck": "Meren of Clan Nel Toth", "result": "lose" }
                 ]
               }
 
@@ -454,21 +472,22 @@ Return JSON with:
 	}
 	private calculatePodConfidence(data: ParsedPodData, originalText: string): number {
 		let confidence = 0.6
-
+		console.log("Step 1")
 		if (data.game_length_minutes && data.game_length_minutes > 0) confidence += 0.1
 		if (data.turns && data.turns > 0) confidence += 0.05
 		if (data.notes && data.notes.trim().length > 5) confidence += 0.1
 		if (data.participants.length >= 3 && data.participants.length <= 4) confidence += 0.1
-
-		const avgCommanderLength = data.participants.reduce((sum, p) => sum + p.commander_deck.length, 0) / data.participants.length
+		console.log("Step 2, already broke?")
+		const avgCommanderLength = data.participants.reduce((sum, p) => sum + (p.commander_deck?.length ?? 0), 0) / data.participants.length
+		console.log("Its this one")
 		if (avgCommanderLength > 8) confidence += 0.1
-
+		console.log("step 3?!?!?!")
 		const hasGenericNames = data.participants.some(p =>
-			/^(player|user|person)\s*\d*$/i.test(p.player_identifier) ||
-			/^(unknown|test|sample)$/i.test(p.commander_deck)
+			/^(player|user|person)\s*\d*$/i.test(p.player_identifier)||
+			p.commander_deck ? /^(unknown|test|sample)$/i.test(p.commander_deck) : null
 		)
 		if (hasGenericNames) confidence -= 0.2
-
+		console.log("I don't think we are getting here?")
 		return Math.max(0.1, Math.min(confidence, 1.0))
 	}
 	private calculatePlayerConfidence(data: any, originalText: string): number {

@@ -1,4 +1,5 @@
 // apps/discord-bot/src/index.ts
+import { DiscordAuthService } from './services/DiscordAuthService.js'
 import {
 	Client,
 	GatewayIntentBits,
@@ -29,6 +30,7 @@ import {
 
 // Override the supabase client for Discord bot
 import { createClient } from '@supabase/supabase-js';
+import { getGameReportingService } from './services/GameReportingService.js';
 const serviceSupabase = createClient(
 	process.env.SUPABASE_URL!,
 	process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -146,21 +148,14 @@ const handleReportCommand = ErrorRecoveryMiddleware.wrapCommandHandler(
 		try {
 			console.log(`🎯 Processing game report from ${interaction.user.username}: "${gameText}"`);
 
-			// Use GeminiRetryService with fallback
-			const parseResult = await GeminiRetryService.parseWithFallback(
-				gameText,
-				async (error) => {
-					console.log('Gemini failed, providing manual fallback structure');
-					return {
-						success: false,
-						error: 'AI parsing failed - manual entry required',
-						requiresManualInput: true
-					};
-				}
-			);
+			const gameReportingService = getGameReportingService()
+			const parseResult = await gameReportingService.parseGameDescription(
+  				gameText, 
+  				interaction.user.id
+			)
 
 			if (!parseResult.success) {
-				if (parseResult.requiresManualInput) {
+				if (parseResult.data.requiresManualInput) {
 					await interaction.followUp({
 						content: `🤖 **AI Parser Unavailable**\n\nThe game parsing AI is temporarily unavailable. Please try again later or contact an admin for manual reporting.\n\n**Error:** ${parseResult.error}`,
 						ephemeral: true

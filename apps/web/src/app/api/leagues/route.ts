@@ -4,6 +4,7 @@ import { handleAPIError } from '@dadgic/shared'
 import { validateLeagueRequest } from '@dadgic/shared'
 import { createLeague, listLeagues } from '@dadgic/shared'
 import { requireAdmin } from '@/lib/auth-middleware'
+import { cookies, headers } from 'next/headers'
 
 export async function GET(request: NextRequest) {
 	try {
@@ -37,6 +38,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+	const requestHeaders = headers();
+	const requestCookies = cookies();
 	try {
 		const body = await request.json()
 
@@ -46,7 +49,7 @@ export async function POST(request: NextRequest) {
 			gamesPerPlayer: body.games_per_player
 		})
 		// 2. EXTRACT USER CONTEXT (league-specific requirement)
-		const authContext = await requireAdmin(request)
+		const authContext = await requireAdmin(requestHeaders, requestCookies)
 		// 1. VALIDATE REQUEST (follow pod pattern)
 		const validation = validateLeagueRequest(body)
 		if (!validation.isValid) {

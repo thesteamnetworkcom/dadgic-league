@@ -26,7 +26,7 @@ export class PodQueries extends BaseQueries {
 				})
 				.select()
 				.single();
-
+			console.log(input.participants)		
 			const { data: participants, error: participantsError } = await supabase
 				.from('pod_participants')
 				.insert(

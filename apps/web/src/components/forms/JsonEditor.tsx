@@ -5,13 +5,13 @@ import { JsonObject } from './JsonObject'
 import { TerminalButton } from '../terminal/TerminalButton'
 
 interface Player {
-  name: string
-  commander: string
+  player_identifier: string
+  commander_deck: string
   result: 'W' | 'L' | 'D'
 }
 
 interface GameData {
-  players: Player[]
+  participants: Player[]
   duration_minutes: number | null
   turns: number | null
   notes: string
@@ -34,9 +34,9 @@ export function JsonEditor({
   className = '' 
 }: JsonEditorProps) {
   const [gameData, setGameData] = useState<GameData>({
-    players: initialData?.players || [
-      { name: '', commander: '', result: 'W' },
-      { name: '', commander: '', result: 'L' }
+    participants: initialData?.participants || [
+      { player_identifier: '', commander_deck: '', result: 'W' },
+      { player_identifier: '', commander_deck: '', result: 'L' }
     ],
     duration_minutes: initialData?.duration_minutes || null,
     turns: initialData?.turns || null,
@@ -47,33 +47,33 @@ export function JsonEditor({
   const [corrections, setCorrections] = useState('')
 
   const updatePlayer = (index: number, field: keyof Player, value: string) => {
-    const newPlayers = [...gameData.players]
+    const newPlayers = [...gameData.participants]
     newPlayers[index] = { ...newPlayers[index], [field]: value }
-    setGameData({ ...gameData, players: newPlayers })
+    setGameData({ ...gameData, participants: newPlayers })
   }
 
   const addPlayer = () => {
     setGameData({
       ...gameData,
-      players: [...gameData.players, { name: '', commander: '', result: 'L' }]
+      participants: [...gameData.participants, { player_identifier: '', commander_deck: '', result: 'L' }]
     })
   }
 
   const removePlayer = (index: number) => {
-    if (gameData.players.length > 2) {
-      const newPlayers = gameData.players.filter((_, i) => i !== index)
-      setGameData({ ...gameData, players: newPlayers })
+    if (gameData.participants.length > 2) {
+      const newPlayers = gameData.participants.filter((_, i) => i !== index)
+      setGameData({ ...gameData, participants: newPlayers })
     }
   }
 
   const getPlayerStatus = (player: Player) => {
-    if (!player.name) return 'needs-input'
-    if (!player.commander) return 'needs-input'
+    if (!player.player_identifier) return 'needs-input'
+    if (!player.commander_deck) return 'needs-input'
     return 'parsed'
   }
 
   const isValid = () => {
-    return gameData.players.every(p => p.name && p.commander) && 
+    return gameData.participants.every(p => p.player_identifier && p.commander_deck) && 
            gameData.duration_minutes !== null
   }
 
@@ -83,15 +83,15 @@ export function JsonEditor({
       <JsonObject indent={0}>
         {/* Players Array */}
         <JsonObject label="players" isArray indent={1}>
-          {gameData.players.map((player, index) => (
+          {gameData.participants.map((player, index) => (
             <div key={index} className="space-y-1">
               <JsonObject indent={2}>
                 <div style={{ paddingLeft: '60px' }}>
                   <JsonField
                     label="name"
-                    value={player.name}
-                    onChange={(value) => updatePlayer(index, 'name', value)}
-                    status={player.name ? 'parsed' : 'needs-input'}
+                    value={player.player_identifier}
+                    onChange={(value) => updatePlayer(index, 'player_identifier', value)}
+                    status={player.player_identifier ? 'parsed' : 'needs-input'}
                     placeholder="Player name"
                     required
                   />
@@ -99,9 +99,9 @@ export function JsonEditor({
                 <div style={{ paddingLeft: '60px' }}>
                   <JsonField
                     label="commander"
-                    value={player.commander}
-                    onChange={(value) => updatePlayer(index, 'commander', value)}
-                    status={player.commander ? 'parsed' : 'needs-input'}
+                    value={player.commander_deck}
+                    onChange={(value) => updatePlayer(index, 'commander_deck', value)}
+                    status={player.commander_deck ? 'parsed' : 'needs-input'}
                     placeholder="Commander name"
                     required
                   />
@@ -130,7 +130,7 @@ export function JsonEditor({
                         >
                           L
                         </button>
-                        {gameData.players.length > 2 && (
+                        {gameData.participants.length > 2 && (
                           <button
                             onClick={() => removePlayer(index)}
                             className="ml-2 text-red-400 hover:text-red-300 text-xs"
@@ -143,7 +143,7 @@ export function JsonEditor({
                   />
                 </div>
               </JsonObject>
-              {index < gameData.players.length - 1 && (
+              {index < gameData.participants.length - 1 && (
                 <div style={{ paddingLeft: '40px' }}>
                   <span className="text-gray-400">,</span>
                 </div>

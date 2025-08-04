@@ -37,13 +37,13 @@ export function GameEditorPage({
         game_length_minutes: gameData.duration_minutes,
         turns: gameData.turns,
         notes: gameData.notes,
-        participants: gameData.players.map((player: any) => ({
-          player_identifier: player.name, // Will be resolved by PlayerMatchingService
-          commander_deck: player.commander,
-          result: player.result === 'W' ? 'win' : player.result === 'L' ? 'lose' : 'draw'
+        participants: gameData.participants.map((player: any) => ({
+          player_identifier: player.player_identifier, // Will be resolved by PlayerMatchingService
+          commander_deck: player.commander_deck,
+          result: player.result === 'W' ? 'win' : player.result === 'L' ? 'lose' : player.result
         }))
       }
-
+      console.log(podData)
       const result = await createPod(podData)
       
       if (result) {

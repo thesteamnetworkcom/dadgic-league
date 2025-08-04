@@ -5,22 +5,17 @@
 
 import {
 	getAIParsingService,
-	getGameService,
-	type ParsedGameData,
-	type CreateGameRequest
+	getPodService,
+	PodService,
 } from '@dadgic/shared'
-
-export class GameReportingService {
-	async parseGameDescription(text: string, userId?: string): Promise<{
-		success: boolean
-		data?: ParsedGameData & { confidence: number }
-		error?: string
-	}> {
+import type { CreatePodRequest, CreatePodResponse, ParsedPodData, PodInput, ResponseBase } from '@dadgic/database'
+export class PodReportingService {
+	async parsePodDescription(text: string, userId?: string): Promise<ResponseBase<ParsedPodData & {confidence: number}>>{
 		try {
 			console.log('🤖 Discord bot parsing game:', { textLength: text.length, userId })
 
 			const aiService = getAIParsingService()
-			const result = await aiService.parseGameText({
+			const result = await aiService.parsePodText({
 				text,
 				context: {
 					source: 'discord',
@@ -31,50 +26,44 @@ export class GameReportingService {
 			if (!result.success) {
 				return {
 					success: false,
-					error: result.error || 'Failed to parse game description'
+					error: result.error || 'Failed to parse game description',
+					timestamp: new Date().toISOString()
 				}
 			}
 
 			return {
 				success: true,
-				data: result.data
+				data: result.data,
+				timestamp: new Date().toISOString()
 			}
 
 		} catch (error) {
 			console.error('❌ Discord AI parsing error:', error)
 			return {
 				success: false,
-				error: 'AI parsing service temporarily unavailable'
+				error: 'AI parsing service temporarily unavailable',
+				timestamp: new Date().toISOString()
 			}
 		}
 	}
 
-	async createGameFromParsedData(
-		parsedData: ParsedGameData,
+	async createPodFromParsedData(
+		parsedData: ParsedPodData,
 		discordUserId: string
-	): Promise<{
-		success: boolean
-		gameId?: string
-		error?: string
-	}> {
+	): Promise<CreatePodResponse> {
 		try {
 			console.log('🎮 Discord bot creating game from parsed data')
 
 			// Convert parsed data to game request format
-			const gameRequest: CreateGameRequest = {
-				date: parsedData.date,
+			const podRequest: CreatePodRequest = {
+				date: parsedData.date || Date.now().toString(),
 				game_length_minutes: parsedData.game_length_minutes,
 				turns: parsedData.turns,
 				notes: parsedData.notes,
-				players: parsedData.players.map(p => ({
-					discord_username: p.name,
-					commander_deck: p.commander,
-					result: p.result
-				}))
+				participants: parsedData.participants
 			}
-
-			const gameService = getGameService()
-			const result = await gameService.createGame(gameRequest, discordUserId)
+			const podService = getPodService()	
+			const result = await podService.createPod(podRequest, discordUserId)
 
 			if (!result.success) {
 				return {

@@ -116,7 +116,7 @@ export async function resolvePlayerIdentifiers(
 
 		for (const identifier of identifiers) {
 			const player = await findPlayerSingle(identifier)
-
+			console.log(player)
 			resolved.push(
 				player
 			)
@@ -146,7 +146,8 @@ export async function resolveParticipants(
 			unknown_identifier: p.player_identifier // "I don't know what this is"
 		}))
 		const players = await resolvePlayerIdentifiers(identifiers) // ADD AWAIT HERE
-
+		console.log(players)
+		console.log(participants)
 		// Map back to participant format
 		const resolved = participants.map((participant, index) => ({
 			player_id: players[index].id,

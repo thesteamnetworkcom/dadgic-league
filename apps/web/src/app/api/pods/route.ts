@@ -5,8 +5,11 @@ import { validatePodRequest } from '@dadgic/shared'
 import { createPod } from '@dadgic/shared'
 import type { PodInput } from '@dadgic/database'
 import { requireAuth } from '@/lib/auth-middleware'
+import { cookies, headers } from 'next/headers'
 
 export async function POST(request: NextRequest) {
+	const requestHeaders = headers();
+	const requestCookies = cookies();
 	try {
 		const body = await request.json()
 
@@ -14,10 +17,9 @@ export async function POST(request: NextRequest) {
 			date: body.date,
 			participantsCount: body.participants?.length
 		})
-		const authContext = await requireAuth(request)
+		const authContext = await requireAuth(requestHeaders, requestCookies)
 		// 1. VALIDATE REQUEST - Check that workable data was passed
 		const validation = validatePodRequest(body)
-
 		// 2. 
 		if (!validation.isValid) {
 			return NextResponse.json({

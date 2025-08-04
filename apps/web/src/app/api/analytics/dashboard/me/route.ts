@@ -1,15 +1,19 @@
 // apps/web/src/app/api/analytics/dashboard/me/route.ts
+export const dynamic = 'force-dynamic'; 
 import { NextRequest, NextResponse } from 'next/server'
 import { handleAPIError } from '@dadgic/shared'
 import { getDashboardData } from '@dadgic/shared'
 import { requireAuth } from '@/lib/auth-middleware'
-
+import { cookies } from 'next/headers'
+import { headers } from 'next/headers' 
 export async function GET(request: NextRequest) {
 	try {
 		console.log('📊 Dashboard API - Get request for current user')
 
 		// 1. EXTRACT AUTH CONTEXT (follows pod pattern)
-		const authContext = await requireAuth(request)
+		const requestHeaders = headers();
+        const requestCookies = cookies();
+		const authContext = await requireAuth(requestHeaders,requestCookies);
 
 		// 2. CALL SERVICE (no validation needed for GET endpoint)
 		console.log('🔄 Calling getDashboardData service')

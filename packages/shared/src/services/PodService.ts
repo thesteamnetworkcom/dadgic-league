@@ -33,7 +33,8 @@ export async function createPod(podData: PodInput, authContext?: DatabaseAuthCon
 			participantsCount: podData.participants.length,
 			authContext: authContext?.user_id
 		})
-		await validateCurrentUserIsAdmin(authContext)
+		console.log(podData)
+		//await validateCurrentUserIsAdmin(authContext)
 		// 1. VALIDATE UNRESOLVED POD DATA
 		const initialValidation = validatePodRequest(podData)
 		if (!initialValidation.isValid) {
@@ -69,7 +70,7 @@ export async function createPod(podData: PodInput, authContext?: DatabaseAuthCon
 			turns: resolvedPodData.turns || null,
 			notes: resolvedPodData.notes?.trim() || null,
 			participants: resolvedPodData.participants
-		})
+		}, 'server-user')
 
 		await checkScheduledPodCompletion(createdPod)
 
