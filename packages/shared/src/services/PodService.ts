@@ -13,7 +13,8 @@ import type {
 	PodWithParticipants,
 	PodInput,
 	DatabaseAuthContext,
-	ParticipantResolved
+	ParticipantResolved,
+	Pod
 } from '@dadgic/database'
 
 import { validatePodResolved, validatePodRequest } from '../utils/validation/pod'
@@ -207,7 +208,7 @@ export async function deletePod(podId: string, authContext?: DatabaseAuthContext
 /**
  * Check Scheduled Pod Completion (For League matching)
  */
-export async function checkScheduledPodCompletion(pod: PodWithParticipants, participants: ParticipantResolved[]): Promise<void> {
+export async function checkScheduledPodCompletion(pod: Pod, participants: ParticipantResolved[]): Promise<void> {
 	try {
 		console.log('🔍 Checking for scheduled pod match:', { podId: pod.id })
 
