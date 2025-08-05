@@ -56,7 +56,7 @@ export function validateAIParseRequest(data: any): ValidationResult {
 	})
 }
 
-export * from './pod'
-export * from './auth'
-export * from './league'
-export * from './player'
+export * from './pod.js'
+export * from './auth.js'
+export * from './league.js'
+export * from './player.js'

@@ -6,17 +6,17 @@
 //export * from '@dadgic/database';
 
 // SERVICES (Updated to use database types)
-export * from './services/PlayerService';
-export * from './services/PodService'; // RENAMED: GameService → PodService
-export * from './services/LeagueService';
-export * from './services/AIParsingService';
-export * from './services/PlayerMatchingService';
-export * from './services/PodGenerationService';
-export * from './services/AnalyticsService'
+export * from './services/PlayerService.js';
+export * from './services/PodService.js'; // RENAMED: GameService → PodService
+export * from './services/LeagueService.js';
+export * from './services/AIParsingService.js';
+export * from './services/PlayerMatchingService.js';
+export * from './services/PodGenerationService.js';
+export * from './services/AnalyticsService.js'
 
 // UTILITIES
-export * from './errors/APIError';
-export * from './utils/validation';
+export * from './errors/APIError.js';
+export * from './utils/validation/index.js';
 
 // MONITORING (existing - keep as-is for now)
 export { ErrorLogger } from './monitoring/error-logger/ErrorLogger.js';
