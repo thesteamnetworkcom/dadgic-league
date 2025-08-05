@@ -15,7 +15,9 @@
     }
   },
   "scripts": {
-    "build": "tsc && tsc-alias",
+    "build:tsc": "tsc",
+    "fix-imports": "node post-build.js", 
+    "build": "npm run clean && npm run build:tsc && npm run fix-imports",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "monitor": "tsx src/monitoring/cli/monitor.ts",
