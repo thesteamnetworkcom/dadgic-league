@@ -4,7 +4,7 @@ import type {
 	Pod,
 	PodWithParticipants,
 	PodResolved,
-} from '../types';
+} from '../types/index.js';
 
 export class PodQueries extends BaseQueries {
 	static async create(input: PodResolved, clientType: ClientType = 'user'): Promise<Pod> {

@@ -3,7 +3,7 @@
 // ============================================================================
 
 import type { Player, CreatePlayerRequest, CreatePlayerInput } from '@dadgic/database'
-import type { ValidationResult } from './'
+import type { ValidationResult } from '.'
 import { ValidationError } from '../../errors/APIError'
 
 /**

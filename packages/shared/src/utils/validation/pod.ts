@@ -5,7 +5,7 @@
 
 // ✅ UPDATED: Import both request and resolved types
 import type { CreatePodRequest, PodResolved } from '@dadgic/database'
-import type { ValidationResult } from './'
+import type { ValidationResult } from '.'
 
 /**
  * Validates pod creation request data (with ParticipantInput - discord_username)

@@ -5,10 +5,17 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./services/*": {
+      "types": "./dist/services/*.d.ts",
+      "default": "./dist/services/*.js"
+    }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc-alias",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "monitor": "tsx src/monitoring/cli/monitor.ts",
@@ -17,7 +24,8 @@
     "monitor:stats": "tsx src/monitoring/cli/monitor.ts stats"
   },
   "dependencies": {
-    "@dadgic/database": "file:../database"
+    "@dadgic/database": "file:../database",
+    "tsc-alias": "^1.8.16"
   },
   "devDependencies": {
     "@types/node": "^20.10.6",

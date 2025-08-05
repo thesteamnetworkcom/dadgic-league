@@ -3,7 +3,7 @@
 // ============================================================================
 
 import type { CreateLeagueInput, CreateLeagueRequest, LeagueResolved } from '@dadgic/database'
-import type { ValidationResult } from './'
+import type { ValidationResult } from '.'
 
 /**
  * Validates league creation request data
