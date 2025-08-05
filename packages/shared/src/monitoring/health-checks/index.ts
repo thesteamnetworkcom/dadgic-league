@@ -1,2 +1,2 @@
-export { HealthChecker } from './HealthChecker.js'
-export type { HealthCheck, SystemHealth } from './HealthChecker.js'
+export { HealthChecker } from './HealthChecker'
+export type { HealthCheck, SystemHealth } from './HealthChecker'

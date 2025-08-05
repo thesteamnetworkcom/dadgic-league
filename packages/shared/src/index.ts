@@ -6,23 +6,23 @@
 //export * from '@dadgic/database';
 
 // SERVICES (Updated to use database types)
-export * from './services/PlayerService.js';
-export * from './services/PodService.js'; // RENAMED: GameService → PodService
-export * from './services/LeagueService.js';
-export * from './services/AIParsingService.js';
-export * from './services/PlayerMatchingService.js';
-export * from './services/PodGenerationService.js';
-export * from './services/AnalyticsService.js'
+export * from './services/PlayerService';
+export * from './services/PodService'; // RENAMED: GameService → PodService
+export * from './services/LeagueService';
+export * from './services/AIParsingService';
+export * from './services/PlayerMatchingService';
+export * from './services/PodGenerationService';
+export * from './services/AnalyticsService'
 
 // UTILITIES
-export * from './errors/APIError.js';
-export * from './utils/validation/index.js';
+export * from './errors/APIError';
+export * from './utils/validation';
 
 // MONITORING (existing - keep as-is for now)
-export { ErrorLogger } from './monitoring/error-logger/ErrorLogger.js';
-export { HealthChecker } from './monitoring/health-checks/HealthChecker.js';
-export type { ErrorContext, LoggedError } from './monitoring/error-logger/ErrorLogger.js';
-export type { HealthCheck, SystemHealth } from './monitoring/health-checks/HealthChecker.js';
+export { ErrorLogger } from './monitoring/error-logger/ErrorLogger';
+export { HealthChecker } from './monitoring/health-checks/HealthChecker';
+export type { ErrorContext, LoggedError } from './monitoring/error-logger/ErrorLogger';
+export type { HealthCheck, SystemHealth } from './monitoring/health-checks/HealthChecker';
 
 // ============================================================================
 // NOTE: All types now come from @dadgic/database package

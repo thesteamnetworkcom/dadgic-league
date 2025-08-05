@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { HealthChecker } from '../health-checks/HealthChecker.js'
-import { ErrorLogger } from '../error-logger/ErrorLogger.js'
+import { HealthChecker } from '../health-checks/HealthChecker'
+import { ErrorLogger } from '../error-logger/ErrorLogger'
 
 async function main() {
 	const command = process.argv[2]

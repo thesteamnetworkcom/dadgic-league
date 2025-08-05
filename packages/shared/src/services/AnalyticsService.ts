@@ -1,6 +1,6 @@
 // packages/shared/src/services/AnalyticsService.ts
 import { db } from '@dadgic/database'
-import { APIError } from '../errors/APIError.js'
+import { APIError } from '../errors/APIError'
 import type { 
   DatabaseAuthContext, 
   PodWithParticipants,

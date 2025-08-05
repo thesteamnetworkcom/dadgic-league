@@ -3,7 +3,7 @@
 // ============================================================================
 
 import { db } from '@dadgic/database'
-import { ValidationError } from '../../errors/APIError.js'
+import { ValidationError } from '../../errors/APIError'
 import type { DatabaseAuthContext } from '@dadgic/database'
 
 /**
