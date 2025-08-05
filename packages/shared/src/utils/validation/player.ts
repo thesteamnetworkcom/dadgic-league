@@ -3,8 +3,8 @@
 // ============================================================================
 
 import type { Player, CreatePlayerRequest, CreatePlayerInput } from '@dadgic/database'
-import type { ValidationResult } from './index'
-import { ValidationError } from '../../errors/APIError'
+import type { ValidationResult } from './index.js'
+import { ValidationError } from '../../errors/APIError.js'
 
 /**
  * Validates player input data (field lengths, required fields, etc.)

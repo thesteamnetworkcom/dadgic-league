@@ -4,11 +4,11 @@
 
 import { db } from '@dadgic/database'
 import type { CreateLeagueResponse, League, LeagueDisplay, LeagueInput, LeagueResolved, DatabaseAuthContext } from '@dadgic/database'
-import { APIError, ValidationError } from '../errors/APIError'
-import { validateLeagueRequest, validateLeagueResolved } from '../utils/validation/league'
-import { validateCurrentUserIsAdmin } from '../utils/validation/auth'
-import { generatePodPairings } from './PodGenerationService'
-import { resolvePlayerIdentifiers } from './PlayerMatchingService'
+import { APIError, ValidationError } from '../errors/APIError.js'
+import { validateLeagueRequest, validateLeagueResolved } from '../utils/validation/league.js'
+import { validateCurrentUserIsAdmin } from '../utils/validation/auth.js'
+import { generatePodPairings } from './PodGenerationService.js'
+import { resolvePlayerIdentifiers } from './PlayerMatchingService.js'
 
 /**
  * Generate a complete league with scheduled pods

@@ -3,7 +3,7 @@
 // ============================================================================
 
 import { db } from '@dadgic/database'
-import { APIError, ValidationError } from '../errors/APIError'
+import { APIError, ValidationError } from '../errors/APIError.js'
 
 // ✅ UPDATED: Import resolved types AND validation
 import type {
@@ -17,9 +17,8 @@ import type {
 	Pod
 } from '@dadgic/database'
 
-import { validatePodResolved, validatePodRequest } from '../utils/validation/pod'
-import { resolveParticipants } from './PlayerMatchingService'
-import { validateCurrentUserIsAdmin } from '../utils/validation'
+import { validatePodResolved, validatePodRequest } from '../utils/validation/pod.js'
+import { resolveParticipants } from './PlayerMatchingService.js'
 
 // ============================================================================
 // POD CRUD OPERATIONS (Game → Pod terminology)

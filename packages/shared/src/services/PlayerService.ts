@@ -3,10 +3,9 @@
 // ============================================================================
 
 import { db, Player, CreatePlayerResponse, CreatePlayerRequest, PlayerInput, DatabaseAuthContext, CreatePlayerInput } from '@dadgic/database'
-import { APIError, ValidationError } from '../errors/APIError'
-import { validatePlayerRequest, validatePlayerExists } from '../utils/validation/player'
-import { ClientType } from '@dadgic/database/dist/client-factory'
-import { validateCurrentUserIsAdmin } from '../utils/validation'
+import { APIError, ValidationError } from '../errors/APIError.js'
+import { validatePlayerRequest, validatePlayerExists } from '../utils/validation/player.js'
+import { validateCurrentUserIsAdmin } from '../utils/validation/index.js'
 
 
 // ============================================================================

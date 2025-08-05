@@ -3,11 +3,11 @@
 // ============================================================================
 
 // Real Services (Complete implementations)
-export { AIParsingService, getAIParsingService, parseWithAI } from './AIParsingService'
-export * from './PodService'
-export * from './PlayerService'
-export * from './LeagueService'
-export * from './AnalyticsService'
+export { AIParsingService, getAIParsingService, parseWithAI } from './AIParsingService.js'
+export * from './PodService.js'
+export * from './PlayerService.js'
+export * from './LeagueService.js'
+export * from './AnalyticsService.js'
 
 // Utility exports
 export { validate, validateAIParseRequest } from '../utils/validation/index.js'

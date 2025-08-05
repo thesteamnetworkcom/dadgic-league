@@ -15,7 +15,7 @@ import type {
 	ParticipantResolved
 } from '@dadgic/database'
 
-import { APIError } from '../errors/APIError'
+import { APIError } from '../errors/APIError.js'
 
 // ============================================================================
 // PLAYER MATCHING SERVICE - FUNCTION PATTERN
