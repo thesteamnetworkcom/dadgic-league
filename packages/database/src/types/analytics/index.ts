@@ -1,5 +1,5 @@
-import { ResponseBase } from "../common/base"
-import { PodWithParticipants } from "../entities"
+import { ResponseBase } from "../common/base.js"
+import { PodWithParticipants } from "../entities/index.js"
 
 // Player statistics aggregation
 export interface PlayerStats {

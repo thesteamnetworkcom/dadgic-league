@@ -2,10 +2,10 @@
 // API REQUEST TYPES - Extend Base Types with Request Metadata
 // ============================================================================
 
-import { RequestBase } from '../common/base';
-import { PodInput } from '../pods';
-import { PlayerInput } from '../players';
-import { LeagueInput } from '../leagues';
+import { RequestBase } from '../common/base.js';
+import { PodInput } from '../pods/index.js';
+import { PlayerInput } from '../players/index.js';
+import { LeagueInput } from '../leagues/index.js';
 
 // API requests extend base types with request context
 export interface CreatePodRequest extends PodInput, RequestBase { }

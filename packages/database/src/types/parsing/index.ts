@@ -2,8 +2,8 @@
 // AI PARSING TYPES - For AIParsingService
 // ============================================================================
 
-import { ResponseBase, RequestBase } from '../common/base';
-import { ParticipantInput } from '../participants';
+import { ResponseBase, RequestBase } from '../common/base.js';
+import { ParticipantInput } from '../participants/index.js';
 
 export interface ParseRequest extends RequestBase {
 	text: string;

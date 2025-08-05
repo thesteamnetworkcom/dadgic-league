@@ -1,10 +1,10 @@
-import { BaseQueries } from './base';
-import type { ClientType } from '../client-factory';
+import { BaseQueries } from './base.js';
+import type { ClientType } from '../client-factory.js';
 import type {
 	Pod,
 	PodWithParticipants,
 	PodResolved,
-} from '../types';
+} from '../types/index.js';
 
 export class PodQueries extends BaseQueries {
 	static async create(input: PodResolved, clientType: ClientType = 'user'): Promise<Pod> {

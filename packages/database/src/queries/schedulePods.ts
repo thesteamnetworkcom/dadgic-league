@@ -1,6 +1,6 @@
-import { BaseQueries } from ".."
-import { ClientType } from "../client-factory";
-import { ScheduledPod } from "../types"
+import { BaseQueries } from "./base.js"
+import { ClientType } from "../client-factory.js";
+import { ScheduledPod } from "../types/index.js"
 export class ScheduledPodQueries extends BaseQueries {
 	static async findByPlayers(playerIds: string[], clientType: ClientType = 'user'): Promise<ScheduledPod | null> {
 		const supabase = this.getClient(clientType);

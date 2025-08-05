@@ -3,23 +3,23 @@
 // ============================================================================
 
 // Core entities (most important)
-export * from './entities';
+export * from './entities/index.js';
 
 // Base types for extensions
-export * from './common/base';
+export * from './common/base.js';
 
 // Type families organized by purpose
-export * from './participants';
-export * from './pods';
-export * from './players';
-export * from './leagues';
+export * from './participants/index.js';
+export * from './pods/index.js';
+export * from './players/index.js';
+export * from './leagues/index.js';
 
 // API types
-export * from './requests';
-export * from './responses';
-export * from './api';
+export * from './requests/index.js';
+export * from './responses/index.js';
+export * from './api/index.js';
 
 // Service-specific types
-export * from './matching';
-export * from './parsing';
-export * from './analytics';
+export * from './matching/index.js';
+export * from './parsing/index.js';
+export * from './analytics/index.js';

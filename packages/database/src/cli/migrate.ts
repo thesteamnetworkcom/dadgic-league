@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import { MigrationRunner } from '../migration-runner/MigrationRunner'
-import { migrations } from '../migrations/MigrationRegistry'
-import { BackupService } from '../backup/BackupService'
+import { MigrationRunner } from '../migration-runner/MigrationRunner.js'
+import { migrations } from '../migrations/MigrationRegistry.js'
+import { BackupService } from '../backup/BackupService.js'
 
 async function main() {
 	const command = process.argv[2]

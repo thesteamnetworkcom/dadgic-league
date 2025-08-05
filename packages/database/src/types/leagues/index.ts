@@ -2,10 +2,9 @@
 // LEAGUE TYPE FAMILY
 // ============================================================================
 
-import { LeagueBase } from "../common/base";
-import { Player } from "../core";
-import { PlayerIdentifier } from "../matching";
-import { ParticipantInput } from "../participants";
+import { LeagueBase } from "../common/base.js";
+import { Player } from "../core.js";
+import { PlayerIdentifier } from "../matching/index.js";
 
 // Input variant - for creating leagues
 export interface LeagueInput extends LeagueBase {
