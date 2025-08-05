@@ -1,6 +1,7 @@
 {
   "name": "dadgic",
   "version": "1.0.0",
+   "packageManager": "npm@10.0.0",
   "private": true,
   "workspaces": [
     "apps/*",
@@ -38,7 +39,6 @@
     "happy-dom": "^18.0.1",
     "jsdom": "^26.1.0",
     "msw": "^2.10.4",
-    "turbo": "^1.10.0",
     "typescript": "^5.0.0",
     "vitest": "^3.2.4"
   },
@@ -102,7 +102,7 @@
     "tr46": "^0.0.3",
     "tslib": "^2.8.1",
     "tsx": "^4.20.3",
-    "turbo": "^1.13.4",
+    "turbo": "^2.5.5",
     "type-fest": "^0.21.3",
     "undici-types": "^6.21.0",
     "util-deprecate": "^1.0.2",
