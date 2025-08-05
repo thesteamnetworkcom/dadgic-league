@@ -1,5 +1,5 @@
 // apps/discord-bot/src/services/ConversationManager.ts
-import type { ParsedPodData } from '@dadgic/shared'
+import type { ParsedPodData } from '@dadgic/database'
 
 export interface ConversationState {
   conversationId: string

@@ -18,13 +18,14 @@ export function AuthRedirectWrapper({
   const router = useRouter()
 
   useEffect(() => {
-    console.log('AuthRedirectWrapper: auth state', { user: !!user, loading })
-    // If user is authenticated, redirect to dashboard
-    if (!loading && user) {
-      console.log('AuthRedirectWrapper: redirecting to dashboard')
-      router.push(redirectTo)
+    if (loading) return
+    
+    if (!user && window.location.pathname !== '/') {
+      router.replace('/')
+    } else if (user && window.location.pathname === '/') {
+      router.replace(redirectTo)
     }
-  }, [user, loading, redirectTo])
+  }, [user, loading])
 
   // Show loading state while checking auth
   if (loading) {

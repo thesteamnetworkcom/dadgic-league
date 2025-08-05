@@ -1,15 +1,9 @@
-// apps/discord-bot/src/commands/ReportCommand.ts
-import { 
-  SlashCommandBuilder, 
-  ChatInputCommandInteraction, 
-  EmbedBuilder, 
-  ActionRowBuilder, 
-  ButtonBuilder, 
-  ButtonStyle,
-  Colors 
-} from 'discord.js'
-import { createPod, getAIParsingService, getPodService, PodService } from '@dadgic/shared'
-import type { DatabaseAuthContext } from '@dadgic/database'
+// apps/discord-bot/src/commands/ReportCommand.ts - Fully modular
+import { SlashCommandBuilder, ChatInputCommandInteraction } from 'discord.js'
+import { ConversationManager } from '../services/ConversationManager.js'
+import { PodParsingService } from '../services/PodParsingService.js'
+import { PodEmbedBuilder } from '../ui/EmbedBuilder.js'
+import { PodComponentBuilder } from '../ui/ComponentBuilder.js'
 
 export class ReportCommand {
   static data = new SlashCommandBuilder()
@@ -27,66 +21,54 @@ export class ReportCommand {
     await interaction.deferReply({ ephemeral: true })
 
     try {
-      console.log(`🎯 Processing game report: "${gameText}"`)
+      console.log(`🎯 Processing pod report from ${interaction.user.username}: "${gameText}"`)
 
-      // Parse game with AI
-      const aiService = getAIParsingService()
-      const parseResult = await aiService.parsePodText({
-        text: gameText,
-        domain: 'pod',
-        context: {
-          source: 'discord',
-          user_id: interaction.user.id
-        }
-      })
+      // Create conversation
+      const conversationId = ConversationManager.create(interaction.user.id, gameText)
+
+      // Parse game description
+      const parseResult = await PodParsingService.parseGameDescription(
+        gameText,
+        interaction.user.id
+      )
 
       if (!parseResult.success) {
+        // Clean up conversation on failure
+        ConversationManager.delete(conversationId)
+        
         await interaction.followUp({
-          content: `❌ **Parsing Failed**\n\n${parseResult.error}\n\nPlease try rephrasing your game description.`,
+          embeds: [PodEmbedBuilder.buildError(
+            parseResult.error!,
+            '❌ Parsing Failed'
+          )],
           ephemeral: true
         })
         return
       }
 
-      // Build confirmation embed
-      const embed = new EmbedBuilder()
-        .setColor(Colors.Green)
-        .setTitle('🎮 Game Parsed Successfully!')
-        .setDescription(`**Original:** ${gameText}`)
-        .addFields(
-          {
-            name: '👥 Players',
-            value: parseResult.data?.participants?.map(p => 
-              `${p.result === 'win' ? '🏆' : '❌'} ${p.player_identifier}${p.commander_deck ? ` (${p.commander_deck})` : ''}`
-            ).join('\n') || 'No players found',
-            inline: false
-          }
-        )
+      const { parsedData, missingData, confidence } = parseResult.data!
 
-      if (parseResult.data?.game_length_minutes) {
-        embed.addFields({ name: '⏱️ Duration', value: `${parseResult.data.game_length_minutes} minutes`, inline: true })
-      }
-      if (parseResult.data?.turns) {
-        embed.addFields({ name: '🔄 Turns', value: `${parseResult.data.turns}`, inline: true })
-      }
-      if (parseResult.data?.notes) {
-        embed.addFields({ name: '📝 Notes', value: parseResult.data.notes, inline: false })
-      }
+      // Update conversation with parsed data
+      ConversationManager.update(conversationId, {
+        parsedData,
+        missingData
+      })
 
-      // Add buttons
-      const buttons = new ActionRowBuilder<ButtonBuilder>()
-        .addComponents(
-          new ButtonBuilder()
-            .setCustomId(`submit-${interaction.user.id}`)
-            .setLabel('Submit Game')
-            .setStyle(ButtonStyle.Primary)
-            .setEmoji('✅'),
-          new ButtonBuilder()
-            .setCustomId(`cancel-${interaction.user.id}`)
-            .setLabel('Cancel')
-            .setStyle(ButtonStyle.Secondary)
-            .setEmoji('❌')
-        )
+      // Check if we have missing critical data
+      const hasMissingData = PodParsingService.getMissingDataSummary(missingData).length > 0
+
+      // Build confirmation embed and buttons
+      const embed = PodEmbedBuilder.buildParsingConfirmation(
+        gameText,
+        parsedData,
+        missingData,
+        confidence
+      )
+
+      const buttons = PodComponentBuilder.buildConfirmationButtons(
+        conversationId,
+        hasMissingData
+      )
 
       await interaction.followUp({
         embeds: [embed],
@@ -94,102 +76,17 @@ export class ReportCommand {
         ephemeral: true
       })
 
-      // Store the parsed data for button handling
-      // We'll use a simple Map for now
-      ReportCommand.pendingReports.set(interaction.user.id, {
-        originalText: gameText,
-        parsedData: parseResult.data,
-        timestamp: Date.now()
-      })
+      console.log(`✅ Pod parsing completed for conversation: ${conversationId}`)
 
     } catch (error) {
       console.error('❌ Report command error:', error)
+      
       await interaction.followUp({
-        content: '❌ Something went wrong while processing your game report. Please try again.',
+        embeds: [PodEmbedBuilder.buildError(
+          'An unexpected error occurred while processing your game report.',
+          '❌ Processing Failed'
+        )],
         ephemeral: true
-      })
-    }
-  }
-
-  // Simple storage for pending reports (we'll improve this later)
-  static pendingReports = new Map<string, {
-    originalText: string
-    parsedData: any
-    timestamp: number
-  }>()
-
-  // Handle button interactions
-  static async handleButtonInteraction(interaction: any) {
-    const userId = interaction.customId.split('-')[1]
-    
-    if (interaction.user.id !== userId) {
-      await interaction.reply({ content: 'This button is not for you!', ephemeral: true })
-      return
-    }
-
-    const pendingReport = ReportCommand.pendingReports.get(userId)
-    if (!pendingReport) {
-      await interaction.reply({ content: 'This report has expired. Please submit a new one.', ephemeral: true })
-      return
-    }
-
-    if (interaction.customId.startsWith('submit-')) {
-      await ReportCommand.submitGame(interaction, pendingReport)
-    } else if (interaction.customId.startsWith('cancel-')) {
-      ReportCommand.pendingReports.delete(userId)
-      await interaction.update({
-        content: '❌ Game report cancelled.',
-        embeds: [],
-        components: []
-      })
-    }
-  }
-
-  static async submitGame(interaction: any, pendingReport: any) {
-    try {
-      await interaction.deferUpdate()
-
-      // Create auth context for Discord bot (service role)
-      const authContext: DatabaseAuthContext = {
-        user_id: interaction.user.id,
-        supabase_user_id: interaction.user.id,
-        is_admin: true // Discord bot operates with admin privileges
-      }
-
-      // Create pod through PodService
-      const podInput = {
-        participants: pendingReport.parsedData.participants || [],
-        duration_minutes: pendingReport.parsedData.duration_minutes,
-        turns: pendingReport.parsedData.turns,
-        notes: pendingReport.parsedData.notes,
-        date: Date.now().toString()
-      }
-
-      const result = await createPod(podInput, authContext)
-
-      if (result.success) {
-        await interaction.editReply({
-          content: `✅ **Game recorded successfully!**\n\nPod ID: ${result.data?.id}`,
-          embeds: [],
-          components: []
-        })
-      } else {
-        await interaction.editReply({
-          content: `❌ **Failed to record game**\n\n${result.error}`,
-          embeds: [],
-          components: []
-        })
-      }
-
-      // Clean up
-      ReportCommand.pendingReports.delete(interaction.user.id)
-
-    } catch (error) {
-      console.error('❌ Submit game error:', error)
-      await interaction.editReply({
-        content: '❌ Something went wrong while saving your game.',
-        embeds: [],
-        components: []
       })
     }
   }

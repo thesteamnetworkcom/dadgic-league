@@ -62,6 +62,7 @@ export async function createPod(podData: PodInput, authContext?: DatabaseAuthCon
 
 		// 4. CALL QUERY FUNCTION
 		console.log('💾 Creating pod in database')
+		const clientType = authContext?.is_admin ? 'service' : 'server-user'
 		const createdPod = await db.pods.create({
 			date: resolvedPodData.date,
 			league_id: resolvedPodData.league_id,
@@ -69,7 +70,7 @@ export async function createPod(podData: PodInput, authContext?: DatabaseAuthCon
 			turns: resolvedPodData.turns || null,
 			notes: resolvedPodData.notes?.trim() || null,
 			participants: resolvedPodData.participants
-		}, 'server-user')
+		}, clientType)
 
 		await checkScheduledPodCompletion(createdPod)
 

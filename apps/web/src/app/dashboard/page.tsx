@@ -10,16 +10,6 @@ import { TerminalLoading } from '@/components/terminal/TerminalLoading'
 
 export default function Dashboard() {
   const { user, loading } = useAuth()
-  const router = useRouter()
-
-  useEffect(() => {
-    console.log('Dashboard: auth state', { user: !!user, loading })
-    // Redirect to landing if not authenticated
-    if (!loading && !user) {
-      console.log('Dashboard: redirecting to landing - no user')
-      router.push('/')
-    }
-  }, [user, loading])
 
   // Show loading while checking auth
   if (loading) {
