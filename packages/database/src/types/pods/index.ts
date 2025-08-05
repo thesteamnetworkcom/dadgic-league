@@ -2,8 +2,8 @@
 // POD TYPE FAMILY - Clean Extension Pattern (Pod = Game)
 // ============================================================================
 
-import { PodBase } from '../common/base.js';
-import { ParticipantInput, ParticipantResolved, ParticipantDisplay } from '../participants/index.js';
+import { PodBase } from '../common/base';
+import { ParticipantInput, ParticipantResolved, ParticipantDisplay } from '../participants';
 
 // Input variant - what we receive from forms/API
 export interface PodInput extends PodBase {

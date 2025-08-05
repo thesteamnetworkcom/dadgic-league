@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { getCurrentUser } from './auth'
-import { AuthContext } from '@dadgic/database/src/types/api'
+import { AuthContext } from '@dadgic/database'
 
 export async function extractAuthContext(headers: any, cookies: any): Promise<AuthContext> {
 	try {

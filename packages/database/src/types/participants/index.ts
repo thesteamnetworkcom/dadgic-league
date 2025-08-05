@@ -2,7 +2,7 @@
 // PARTICIPANT TYPE FAMILY - Unified and Clean
 // ============================================================================
 
-import { ParticipantBase } from '../common/base.js';
+import { ParticipantBase } from '../common/base';
 
 // Input variant - what we receive from forms/API
 export interface ParticipantInput extends ParticipantBase {

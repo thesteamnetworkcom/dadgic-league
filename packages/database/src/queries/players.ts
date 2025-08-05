@@ -1,6 +1,6 @@
-import { BaseQueries } from './base.js';
-import type { ClientType } from '../client-factory.js';
-import type { Player, PlayerInput } from '../types/index.js';
+import { BaseQueries } from './base';
+import type { ClientType } from '../client-factory';
+import type { Player, PlayerInput } from '../types';
 
 export class PlayerQueries extends BaseQueries {
 	static async getAll(clientType: ClientType = 'user'): Promise<Player[]> {

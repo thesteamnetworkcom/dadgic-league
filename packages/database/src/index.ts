@@ -3,22 +3,22 @@
 // ============================================================================
 
 // Types (re-exported from shared)
-export * from './types/index.js';
+export * from './types';
 
 // Query classes (will be updated to use new types)
-export * from './queries/pods.js';
-export * from './queries/players.js';
-export * from './queries/leagues.js';
-export * from './queries/base.js';
-
+export * from './queries/pods';
+export * from './queries/players';
+export * from './queries/leagues';
+export * from './queries/base';
+export * from './client-factory';
 // Legacy client (deprecated)
 
 // Main database interface
-import { PodQueries } from './queries/pods.js';
-import { PlayerQueries } from './queries/players.js';
-import { LeagueQueries } from './queries/leagues.js';
-import { BaseQueries } from './queries/base.js';
-import { ScheduledPodQueries } from './queries/schedulePods.js';
+import { PodQueries } from './queries/pods';
+import { PlayerQueries } from './queries/players';
+import { LeagueQueries } from './queries/leagues';
+import { BaseQueries } from './queries/base';
+import { ScheduledPodQueries } from './queries/schedulePods';
 
 export const db = {
 	pods: PodQueries,

@@ -2,7 +2,7 @@
 // PLAYER MATCHING TYPES - For PlayerMatchingService
 // ============================================================================
 
-import { Player } from '../entities/index.js';
+import { Player } from '../entities';
 
 export interface PlayerIdentifier {
 	id?: string | null;

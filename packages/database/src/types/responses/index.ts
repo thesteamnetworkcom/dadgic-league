@@ -2,8 +2,8 @@
 // API RESPONSE TYPES - Standardized Response Format
 // ============================================================================
 
-import { ResponseBase } from '../common/base.js';
-import { Player, League, Pod } from '../entities/index.js';
+import { ResponseBase } from '../common/base';
+import { Player, League, Pod } from '../entities';
 
 // Standard CRUD responses
 export interface CreatePodResponse extends ResponseBase<Pod> { }

@@ -8,7 +8,7 @@ const nextConfig = {
     ],
   },
   // Enable transpilation of workspace packages
-  transpilePackages: ['@dadgic/database'],
+  transpilePackages: ['@dadgic/database', '@dadgic/shared'],
 }
 
 module.exports = nextConfig

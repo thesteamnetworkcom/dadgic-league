@@ -2,8 +2,8 @@
   "name": "@dadgic/database",
   "version": "1.0.0",
   "type":"module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
@@ -13,6 +13,16 @@
     "db:backup": "tsx src/cli/migrate-with-env.ts backup create",
     "migrate:up": "tsx src/cli/migrate-with-env.ts migrate up",
     "migrate:history": "tsx src/cli/migrate-with-env.ts migrate history"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    }
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.0"

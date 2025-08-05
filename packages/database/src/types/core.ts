@@ -1,7 +1,7 @@
 // ============================================================================
 // CORE TYPES - Single Source of Truth
 // ============================================================================
-export * from './api/index.js'
+export * from './api'
 export interface Player {
 	id: string;
 	name: string;

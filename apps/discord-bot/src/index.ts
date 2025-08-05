@@ -1,3 +1,4 @@
+import './health.js'
 import { Client, GatewayIntentBits } from 'discord.js'
 import { HelpCommand } from './commands/HelpCommand.js'
 import { ReportCommand } from './commands/ReportCommand.js'

@@ -1,7 +1,7 @@
 // apps/web/src/lib/api/client.ts
 // Fixed API client that automatically includes auth tokens
 
-import { SupabaseClientFactory } from '@dadgic/database/src/client-factory'
+import { SupabaseClientFactory } from '@dadgic/database'
 import { clearSessionCache } from '../auth-session'
 import { APIResponse } from '@dadgic/database'
 

@@ -1,6 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
-import { SupabaseClientFactory, ClientType } from '../client-factory.js';
-import { DatabaseAuthContext } from '../types/api/index.js';
+import { SupabaseClientFactory, ClientType } from '../client-factory';
+import { DatabaseAuthContext } from '../types/api';
 
 export abstract class BaseQueries {
 	protected static getClient(type: ClientType = 'user'): SupabaseClient {

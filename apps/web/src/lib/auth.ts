@@ -1,6 +1,6 @@
 // src/lib/auth.ts
 import { db } from '@dadgic/database'
-import { SupabaseClientFactory } from '@dadgic/database/src/client-factory'
+import { SupabaseClientFactory } from '@dadgic/database'
 import { clearSessionCache, getCachedUser, isSessionValid, setSessionCache } from './auth-session'
 
 // Re-export the supabase client for use in other parts of the app

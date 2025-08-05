@@ -1,1 +1,1 @@
-export { BackupService } from './BackupService.js'
+export { BackupService } from './BackupService'

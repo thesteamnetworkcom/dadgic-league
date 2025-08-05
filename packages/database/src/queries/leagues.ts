@@ -1,7 +1,7 @@
 // packages/database/src/queries/leagues.ts
-import { ClientType, SupabaseClientFactory } from '../client-factory.js';
-import { League, LeagueWithProgress, CreateLeagueInput, ScheduledPod, PodWithParticipants, ParticipantInput, PlayerIdentifier, LeagueResolved, Player } from '../types/index.js';
-import { BaseQueries } from './base.js';
+import { ClientType, SupabaseClientFactory } from '../client-factory';
+import { League, LeagueWithProgress, CreateLeagueInput, ScheduledPod, PodWithParticipants, ParticipantInput, PlayerIdentifier, LeagueResolved, Player } from '../types';
+import { BaseQueries } from './base';
 
 export class LeagueQueries extends BaseQueries {
 	// Add to LeagueQueries class in packages/database/src/queries/leagues.ts
