@@ -6,8 +6,6 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": "./dist/index.js",
-    "./services/*": "./dist/services/*",
-    "./utils/*": "./dist/utils/*"
   },
   "scripts": {
     "build": "tsc",
