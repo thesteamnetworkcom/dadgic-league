@@ -101,7 +101,7 @@ export async function listLeagues(filters: {
 	status?: string,
 	limit?: number
 	offset?: number
-} = {}): Promise<LeagueDisplay[]> {
+} = {}): Promise<League[]> {
 	try {
 		console.log('📋 Listing pods with filters:', filters)
 

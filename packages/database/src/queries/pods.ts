@@ -75,17 +75,24 @@ export class PodQueries extends BaseQueries {
 		}
 	}
 
-	static async getById(id: string, clientType: ClientType = 'user'): Promise<Pod | null> {
+	static async getById(id: string, clientType: ClientType = 'user'): Promise<PodWithParticipants | null> {
 		this.validateRequired(id, 'pod id');
 
 		const supabase = this.getClient(clientType);
 
 		try {
 			const { data, error } = await supabase
-				.from('pods')
-				.select('*')
-				.eq('id', id)
-				.single();
+            .from('pods')
+            .select(`
+                *,
+                participants:pod_participants(
+                    *,
+                    player:players(*)
+                )
+            `)
+            .eq('id', id)
+            .single();
+
 
 			if (error) {
 				if (error.code === 'PGRST116') {

@@ -12,7 +12,8 @@ import type {
 	PodDisplay,
 	PodWithParticipants,
 	PodInput,
-	DatabaseAuthContext
+	DatabaseAuthContext,
+	ParticipantResolved
 } from '@dadgic/database'
 
 import { validatePodResolved, validatePodRequest } from '../utils/validation/pod'
@@ -72,7 +73,7 @@ export async function createPod(podData: PodInput, authContext?: DatabaseAuthCon
 			participants: resolvedPodData.participants
 		}, clientType)
 
-		await checkScheduledPodCompletion(createdPod)
+		await checkScheduledPodCompletion(createdPod, resolvedPodData.participants)
 
 		return {
 			success: true,
@@ -206,12 +207,12 @@ export async function deletePod(podId: string, authContext?: DatabaseAuthContext
 /**
  * Check Scheduled Pod Completion (For League matching)
  */
-export async function checkScheduledPodCompletion(pod: PodWithParticipants): Promise<void> {
+export async function checkScheduledPodCompletion(pod: PodWithParticipants, participants: ParticipantResolved[]): Promise<void> {
 	try {
 		console.log('🔍 Checking for scheduled pod match:', { podId: pod.id })
 
 		// 1. Extract and sort player IDs
-		const playerIds = pod.participants.map(p => p.player_id).sort()
+		const playerIds = participants.map(p => p.player_id).sort()
 		console.log('👥 Player IDs for matching:', playerIds)
 
 		// 2. Find matching scheduled pod
