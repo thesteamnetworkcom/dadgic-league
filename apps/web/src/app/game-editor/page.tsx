@@ -14,15 +14,35 @@ export default function GameEditor() {
   const [parsedData, setParsedData] = useState(null)
 
   useEffect(() => {
-    // Redirect to landing if not authenticated
     if (!loading && !user) {
       router.push('/')
-      return
     }
+  }, [user, loading])
 
-    // Load parsed data from session storage
+  // Separate effect for sessionStorage - runs immediately on mount
+  useEffect(() => {
     if (typeof window !== 'undefined') {
+      // First, try to get immediate data (fresh from GameLogger)
+      const immediateData = sessionStorage.getItem('parsedGameData_immediate')
+      console.log(immediateData)
+      if (immediateData) {
+        try {
+          const parsed = JSON.parse(immediateData)
+          // Check if data is recent (within 30 seconds)
+          if (Date.now() - parsed.timestamp < 30000) {
+            setParsedData(parsed.data)
+            // Clean up immediate data
+            sessionStorage.removeItem('parsedGameData_immediate')
+            return
+          }
+        } catch (error) {
+          console.error('Failed to parse immediate game data:', error)
+        }
+      }
+
+      // Fallback to regular stored data (for refreshes)
       const stored = sessionStorage.getItem('parsedGameData')
+      console.log(stored)
       if (stored) {
         try {
           setParsedData(JSON.parse(stored))
@@ -31,7 +51,7 @@ export default function GameEditor() {
         }
       }
     }
-  }, [user, loading])
+  }, []) // Empty deps - runs once on mount immediately
 
   // Show loading while checking auth
   if (loading) {

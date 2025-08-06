@@ -191,7 +191,7 @@ export class AIParsingService {
 				// Only retry for actual AI/parsing failures, not validation failures
             	if (lastError.message.includes('Invalid AI response') ||
                 lastError.message.includes('Empty response') ||
-                lastError.message.includes('timeout')) {
+                lastError.message.includes('timeout') || lastError.message.includes('overloaded')) {
                 
 					if (attempt < this.maxRetries) {
 						const delay = 1000 * attempt

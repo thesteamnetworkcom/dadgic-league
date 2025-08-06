@@ -1,5 +1,5 @@
 // src/components/forms/JsonEditor.tsx
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { JsonField } from './JsonField'
 import { JsonObject } from './JsonObject'
 import { TerminalButton } from '../terminal/TerminalButton'
@@ -26,6 +26,17 @@ interface JsonEditorProps {
   className?: string
 }
 
+const createDefaultGameData = (initialData?: Partial<GameData>): GameData => ({
+  participants: initialData?.participants || [
+    { player_identifier: '', commander_deck: '', result: 'W' },
+    { player_identifier: '', commander_deck: '', result: 'L' }
+  ],
+  duration_minutes: initialData?.duration_minutes || null,
+  turns: initialData?.turns || null,
+  notes: initialData?.notes || '',
+  timestamp: initialData?.timestamp || new Date().toISOString()
+})
+
 export function JsonEditor({ 
   initialData, 
   onSave, 
@@ -33,18 +44,15 @@ export function JsonEditor({
   isLoading = false,
   className = '' 
 }: JsonEditorProps) {
-  const [gameData, setGameData] = useState<GameData>({
-    participants: initialData?.participants || [
-      { player_identifier: '', commander_deck: '', result: 'W' },
-      { player_identifier: '', commander_deck: '', result: 'L' }
-    ],
-    duration_minutes: initialData?.duration_minutes || null,
-    turns: initialData?.turns || null,
-    notes: initialData?.notes || '',
-    timestamp: initialData?.timestamp || new Date().toISOString()
-  })
-
+  const [gameData, setGameData] = useState(() => createDefaultGameData(initialData))
   const [corrections, setCorrections] = useState('')
+
+  // Sync state when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      setGameData(createDefaultGameData(initialData))
+    }
+  }, [initialData])
 
   const updatePlayer = (index: number, field: keyof Player, value: string) => {
     const newPlayers = [...gameData.participants]
@@ -66,15 +74,19 @@ export function JsonEditor({
     }
   }
 
-  const getPlayerStatus = (player: Player) => {
-    if (!player.player_identifier) return 'needs-input'
-    if (!player.commander_deck) return 'needs-input'
-    return 'parsed'
+  const getFieldStatus = (value: string | number | null, required = false) => {
+    if (required && !value) return 'needs-input'
+    return value ? 'parsed' : 'needs-input'
   }
 
   const isValid = () => {
     return gameData.participants.every(p => p.player_identifier && p.commander_deck) && 
            gameData.duration_minutes !== null
+  }
+
+  const handleCorrections = () => {
+    onAiAssist(corrections)
+    setCorrections('')
   }
 
   return (
@@ -91,7 +103,7 @@ export function JsonEditor({
                     label="name"
                     value={player.player_identifier}
                     onChange={(value) => updatePlayer(index, 'player_identifier', value)}
-                    status={player.player_identifier ? 'parsed' : 'needs-input'}
+                    status={getFieldStatus(player.player_identifier, true)}
                     placeholder="Player name"
                     required
                   />
@@ -101,7 +113,7 @@ export function JsonEditor({
                     label="commander"
                     value={player.commander_deck}
                     onChange={(value) => updatePlayer(index, 'commander_deck', value)}
-                    status={player.commander_deck ? 'parsed' : 'needs-input'}
+                    status={getFieldStatus(player.commander_deck, true)}
                     placeholder="Commander name"
                     required
                   />
@@ -114,22 +126,19 @@ export function JsonEditor({
                     status="auto-filled"
                     suffix={
                       <div className="flex items-center ml-2 space-x-1">
-                        <button
-                          onClick={() => updatePlayer(index, 'result', 'W')}
-                          className={`px-2 py-1 text-xs rounded ${
-                            player.result === 'W' ? 'bg-status-win text-black' : 'text-status-win hover:bg-status-win/20'
-                          }`}
-                        >
-                          W
-                        </button>
-                        <button
-                          onClick={() => updatePlayer(index, 'result', 'L')}
-                          className={`px-2 py-1 text-xs rounded ${
-                            player.result === 'L' ? 'bg-status-lose text-white' : 'text-status-lose hover:bg-status-lose/20'
-                          }`}
-                        >
-                          L
-                        </button>
+                        {(['W', 'L'] as const).map(result => (
+                          <button
+                            key={result}
+                            onClick={() => updatePlayer(index, 'result', result)}
+                            className={`px-2 py-1 text-xs rounded ${
+                              player.result === result 
+                                ? `bg-status-${result === 'W' ? 'win' : 'lose'} ${result === 'W' ? 'text-black' : 'text-white'}` 
+                                : `text-status-${result === 'W' ? 'win' : 'lose'} hover:bg-status-${result === 'W' ? 'win' : 'lose'}/20`
+                            }`}
+                          >
+                            {result}
+                          </button>
+                        ))}
                         {gameData.participants.length > 2 && (
                           <button
                             onClick={() => removePlayer(index)}
@@ -160,7 +169,7 @@ export function JsonEditor({
             onChange={(value) => setGameData({ ...gameData, duration_minutes: parseInt(value) || null })}
             type="number"
             placeholder="45"
-            status={gameData.duration_minutes ? 'parsed' : 'needs-input'}
+            status={getFieldStatus(gameData.duration_minutes, true)}
             required
             suffix={<span className="text-gray-400">,</span>}
           />
@@ -242,10 +251,7 @@ export function JsonEditor({
             <TerminalButton
               variant="terminal"
               size="sm"
-              onClick={() => {
-                onAiAssist(corrections)
-                setCorrections('')
-              }}
+              onClick={handleCorrections}
               disabled={!corrections.trim() || isLoading}
             >
               {isLoading ? 'Processing...' : 'Let AI Fix This'}

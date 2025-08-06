@@ -30,6 +30,10 @@ export function GameLogger({ onParseComplete, className = '' }: GameLoggerProps)
           // Store parsed data for the JSON editor
           if (typeof window !== 'undefined') {
             sessionStorage.setItem('parsedGameData', JSON.stringify(result))
+            sessionStorage.setItem('parsedGameData_immediate', JSON.stringify({
+              data: result,
+              timestamp: Date.now()
+            }))
           }
           
           // Show success toast
@@ -40,9 +44,7 @@ export function GameLogger({ onParseComplete, className = '' }: GameLoggerProps)
             onParseComplete(result)
           } else {
             // Default: redirect to JSON editor after brief delay
-            setTimeout(() => {
-              router.push('/game-editor')
-            }, 1000)
+            router.push('/game-editor')
           }
           
           setInput('')
